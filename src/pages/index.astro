@@ -1,0 +1,38 @@
+---
+import GameLayout from '../layouts/GameLayout.astro';
+import { GameCanvas } from '../components/GameCanvas';
+import { HUD } from '../components/HUD';
+---
+
+<GameLayout title="Overcast: Glaciers!">
+	<main class="h-full w-full relative">
+        <GameCanvas client:only="react" />
+        <HUD client:only="react" />
+
+        {/* Loading Overlay - visible until React hydrates and mounts (handled by Suspense fallback mostly, but this is Astro level) */}
+        <div id="loader" class="absolute inset-0 flex items-center justify-center pointer-events-none bg-primary z-50 transition-opacity duration-1000">
+            <h1 class="text-4xl font-heading text-accent-ice drop-shadow-glow animate-pulse">
+                Loading Simulation...
+            </h1>
+        </div>
+	</main>
+</GameLayout>
+
+<script>
+    // Simple fade out when window loads
+    window.addEventListener('load', () => {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 1000);
+            }, 500);
+        }
+    });
+</script>
+
+<style>
+    .drop-shadow-glow {
+        filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.8));
+    }
+</style>
