@@ -1,5 +1,6 @@
 import { useGameStore } from '../stores/useGameStore';
 import { FlipPhone } from './FlipPhone';
+import { CameraUI } from './CameraUI';
 import { useState } from 'react';
 
 export const HUD = () => {
@@ -9,6 +10,8 @@ export const HUD = () => {
 
     return (
         <div className="absolute inset-0 pointer-events-none">
+            <CameraUI />
+
             {/* Top Bar */}
             <div className="flex justify-between p-4">
                 <div className="bg-black/50 backdrop-blur-md p-2 rounded-lg border border-accent-ice/30">

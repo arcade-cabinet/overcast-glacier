@@ -7,41 +7,70 @@ const noise2D = createNoise2D();
 export const CHUNK_SIZE = 200; // meters
 
 export const getBiomeAt = (z: number): BiomeType => {
-  // Use lower frequency noise for biome transitions
-  // z is typically negative as we go down the mountain? or positive?
-  // Let's assume we move forward in +z or -z. Let's say we move in -z (downhill).
-  // Actually, standard runner is usually -z is forward/away into screen, or +z is towards camera.
-  // In R3F, usually camera looks down -z. Let's assume player moves towards -z.
+  // z is negative as we go down the mountain
+  // Scale z to make biomes last roughly 500-1500m (2-7 chunks)
+  // z * 0.002 implies a period of ~1000ish
+  const val = noise2D(0, z * 0.002);
 
-  const val = noise2D(0, z * 0.005); // low freq
+  if (z < -15000) return 'summit';
 
-  if (z < -15000) return 'summit'; // Far distance
+  // Adjusted thresholds based on requested frequencies
+  if (val > 0.6) return 'ice_cave';       // ~20%
+  if (val > 0.4) return 'frozen_rink';    // ~10%
+  if (val < -0.7) return 'cocoa_valley';  // ~15%
+  if (val < -0.5) return 'snowball_arena';// ~10%
 
-  if (val > 0.5) return 'ice_cave';
-  if (val > 0.3) return 'frozen_rink';
-  if (val < -0.6) return 'cocoa_valley';
-  if (val < -0.4) return 'snowball_arena';
-
-  return 'open_slope';
+  return 'open_slope'; // Remainder ~45%
 };
 
 export const getHeightAt = (x: number, z: number, biome: BiomeType): number => {
   const baseNoise = noise2D(x * 0.05, z * 0.02) * 2;
+  const slope = - (z * 0.2); // Base downhill slope
 
   switch (biome) {
     case 'open_slope':
-      return baseNoise - (z * 0.2); // Slope downwards
+        // Standard uneven terrain
+        return slope + baseNoise;
+
     case 'ice_cave':
-      // Tunnel shape? Or just ground. Let's just do ground for now.
-      // Caves might need ceiling logic which is complex for heightmap.
-      // We might just do walls.
-      const tunnel = Math.abs(x) > 10 ? 5 : 0;
-      return baseNoise - (z * 0.2) + tunnel;
+        // U-pipe shape: flat center, steep walls
+        // x goes from -20 to 20 roughly
+        const caveWall = Math.pow(Math.abs(x) / 10, 4);
+        return slope + baseNoise * 0.5 + caveWall;
+
     case 'frozen_rink':
-      return - (z * 0.2); // Flat
+        // Perfectly flat surface
+        return slope;
+
+    case 'cocoa_valley':
+        // Bowl shape, cozy
+        const bowl = Math.pow(x / 15, 2) * 2;
+        return slope + bowl + baseNoise * 0.2;
+
+    case 'snowball_arena':
+        // Circular pit feeling or just flat with walls
+        const arenaWall = Math.abs(x) > 15 ? 5 : 0;
+        return slope + arenaWall;
+
+    case 'summit':
+        // Flat plateau
+        return slope;
+
     default:
-      return baseNoise - (z * 0.2);
+        return slope + baseNoise;
   }
+};
+
+export const getBiomeColor = (biome: BiomeType): string => {
+    switch (biome) {
+        case 'open_slope': return '#F8FAFC'; // Snow White
+        case 'ice_cave': return '#E0F2FE'; // Icy Blue
+        case 'frozen_rink': return '#BAE6FD'; // Deep Ice
+        case 'cocoa_valley': return '#FFEDD5'; // Warm tint
+        case 'snowball_arena': return '#F1F5F9'; // Arena Grey
+        case 'summit': return '#7DD3FC'; // Glowing Cyan
+        default: return '#F8FAFC';
+    }
 };
 
 export const getObstacleNoise = (x: number, z: number): number => {

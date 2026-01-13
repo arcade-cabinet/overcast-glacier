@@ -1,20 +1,27 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { getHeightAt, CHUNK_SIZE } from '../lib/procedural';
+import { getHeightAt, getBiomeAt, getBiomeColor, CHUNK_SIZE } from '../lib/procedural';
 import { Player } from '../components/Player';
-import { Snowman } from '../components/Enemies';
+import { Snowman, PolarBear, GlitchImp } from '../components/Enemies';
+import { HotCocoa } from '../components/Collectibles';
 import { SnowEmperor } from '../components/SnowEmperor';
 import { randomRange } from '../lib/utils';
-import { EnemyInstance } from '../types';
+import { EnemyInstance, EnemyType, CollectibleInstance } from '../types';
 
 const BOSS_SPAWN_Z = 1000; // Distance to boss
 
-const TerrainChunk = ({ zOffset, enemiesRef }: { zOffset: number, enemiesRef: React.MutableRefObject<EnemyInstance[]> }) => {
+interface ChunkProps {
+    zOffset: number;
+    enemiesRef: React.MutableRefObject<EnemyInstance[]>;
+    collectiblesRef: React.MutableRefObject<CollectibleInstance[]>;
+}
+
+const TerrainChunk = ({ zOffset, enemiesRef, collectiblesRef }: ChunkProps) => {
   const mesh = useRef<THREE.Mesh>(null);
 
   // Generate geometry data once
-  const { positions, indices, enemySpawns } = useMemo(() => {
+  const { positions, indices, enemySpawns, collectibleSpawns, biomeColor } = useMemo(() => {
     const segments = 20;
     const width = 40; // Path width
     const depth = CHUNK_SIZE;
@@ -22,6 +29,13 @@ const TerrainChunk = ({ zOffset, enemiesRef }: { zOffset: number, enemiesRef: Re
     const positions = [];
     const indices = [];
     const enemySpawns = [];
+    const collectibleSpawns = [];
+
+    // Determine Biome for this chunk center
+    // -zOffset is the start z (e.g. 0, -200, -400)
+    // Center is -zOffset - depth/2
+    const centerZ = -zOffset - depth/2;
+    const biome = getBiomeAt(centerZ);
 
     // Geometry generation
     for (let z = 0; z <= segments; z++) {
@@ -33,7 +47,7 @@ const TerrainChunk = ({ zOffset, enemiesRef }: { zOffset: number, enemiesRef: Re
         const pz = (v - 0.5) * depth - zOffset; // -z goes forward
 
         // Apply height noise
-        const py = getHeightAt(px, pz, 'open_slope'); // using default biome for now
+        const py = getHeightAt(px, pz, biome);
 
         positions.push(px, py, pz);
       }
@@ -58,14 +72,51 @@ const TerrainChunk = ({ zOffset, enemiesRef }: { zOffset: number, enemiesRef: Re
     for(let i=0; i<enemyCount; i++) {
         const ex = randomRange(-10, 10);
         const ez = -zOffset - randomRange(10, CHUNK_SIZE - 10);
-        const ey = getHeightAt(ex, ez, 'open_slope');
-        enemySpawns.push({ position: [ex, ey, ez] as [number, number, number], id: `${zOffset}-${i}` });
+        const ey = getHeightAt(ex, ez, biome);
+
+        // Pick Enemy Type based on Biome
+        let type: EnemyType = 'snowman';
+        const r = Math.random();
+
+        if (biome === 'ice_cave') {
+            type = r > 0.4 ? 'glitch_imp' : 'snowman';
+        } else if (biome === 'cocoa_valley') {
+            type = r > 0.3 ? 'polar_bear' : 'snowman';
+        } else if (biome === 'summit') {
+            type = r > 0.5 ? 'glitch_imp' : 'polar_bear';
+        } else {
+            // Open slope etc
+            if (r > 0.8) type = 'polar_bear';
+            else if (r > 0.9) type = 'glitch_imp';
+            else type = 'snowman';
+        }
+
+        enemySpawns.push({
+            position: [ex, ey, ez] as [number, number, number],
+            id: `${zOffset}-${i}`,
+            type
+        });
+    }
+
+    // Generate Collectibles
+    // Cocoa mostly in Cocoa Valley, rarely elsewhere
+    if (biome === 'cocoa_valley' || Math.random() > 0.7) {
+        const cx = randomRange(-8, 8);
+        const cz = -zOffset - randomRange(10, CHUNK_SIZE - 10);
+        const cy = getHeightAt(cx, cz, biome);
+        collectibleSpawns.push({
+             position: [cx, cy, cz] as [number, number, number],
+             id: `c-${zOffset}`,
+             type: 'cocoa' as const
+        });
     }
 
     return {
         positions: new Float32Array(positions),
         indices: indices,
-        enemySpawns
+        enemySpawns,
+        collectibleSpawns,
+        biomeColor: getBiomeColor(biome)
     };
   }, [zOffset]);
 
@@ -87,20 +138,37 @@ const TerrainChunk = ({ zOffset, enemiesRef }: { zOffset: number, enemiesRef: Re
                 />
             </bufferGeometry>
             <meshStandardMaterial
-                color="#F8FAFC"
+                color={biomeColor}
                 roughness={0.8}
                 flatShading
             />
         </mesh>
-        {enemySpawns.map(spawn => (
-            <Snowman
-                key={spawn.id}
-                position={spawn.position}
-                onRegister={(instance) => {
+        {enemySpawns.map(spawn => {
+            const commonProps = {
+                key: spawn.id,
+                position: spawn.position,
+                onRegister: (instance: EnemyInstance) => {
                      enemiesRef.current.push(instance);
                      return () => {
                          enemiesRef.current = enemiesRef.current.filter(e => e !== instance);
                      };
+                }
+            };
+
+            if (spawn.type === 'polar_bear') return <PolarBear {...commonProps} />;
+            if (spawn.type === 'glitch_imp') return <GlitchImp {...commonProps} />;
+            return <Snowman {...commonProps} />;
+        })}
+
+        {collectibleSpawns.map(spawn => (
+            <HotCocoa
+                key={spawn.id}
+                position={spawn.position}
+                onRegister={(instance: CollectibleInstance) => {
+                    collectiblesRef.current.push(instance);
+                    return () => {
+                        collectiblesRef.current = collectiblesRef.current.filter(c => c !== instance);
+                    };
                 }}
             />
         ))}
@@ -114,6 +182,7 @@ export const MountainScene = () => {
     const { camera } = useThree();
     const lastChunkRef = useRef(CHUNK_SIZE * 2);
     const enemiesRef = useRef<EnemyInstance[]>([]);
+    const collectiblesRef = useRef<CollectibleInstance[]>([]);
 
     useFrame(() => {
         // Player moves in -Z
@@ -123,18 +192,8 @@ export const MountainScene = () => {
 
         // If we need a new chunk
         if (lastChunkRef.current > Math.abs(forwardEdge)) {
-            // This logic is a bit tricky with negative coordinates.
-            // Let's simplify: camera.z starts at 10 and goes down.
-            // Chunks start at 0, 200, 400 (positive offset in my code logic means negative world Z)
-            // Wait, TerrainChunk uses `pz = ... - zOffset`.
-            // So offset 0 = 0 to -200.
-            // Offset 200 = -200 to -400.
-            // Camera z goes 10 -> 0 -> -100 -> ...
-
             // Check if we are approaching the end of the current set
             const currentFurthestChunk = chunks[chunks.length - 1];
-            // -currentFurthestChunk is the start of that chunk.
-            // We want to spawn the NEXT one when we get close.
 
             if (Math.abs(z) > currentFurthestChunk - CHUNK_SIZE) {
                 const newChunk = currentFurthestChunk + CHUNK_SIZE;
@@ -146,9 +205,14 @@ export const MountainScene = () => {
 
     return (
         <group>
-            <Player enemiesRef={enemiesRef} />
+            <Player enemiesRef={enemiesRef} collectiblesRef={collectiblesRef} />
             {chunks.map(offset => (
-                <TerrainChunk key={offset} zOffset={offset} enemiesRef={enemiesRef} />
+                <TerrainChunk
+                    key={offset}
+                    zOffset={offset}
+                    enemiesRef={enemiesRef}
+                    collectiblesRef={collectiblesRef}
+                />
             ))}
             {/* Boss Spawn */}
             <SnowEmperor position={[0, 0, -BOSS_SPAWN_Z]} />

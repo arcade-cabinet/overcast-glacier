@@ -1,40 +1,77 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGameStore } from '../stores/useGameStore';
+import { useGameStore, PlayerForm } from '../stores/useGameStore';
 import { clamp, lerp } from '../lib/utils';
 import { getHeightAt } from '../lib/procedural';
-import { EnemyInstance } from '../types';
+import { EnemyInstance, CollectibleInstance } from '../types';
+import { Snowball } from './Projectiles';
 
-export const Player = ({ enemiesRef }: { enemiesRef?: React.MutableRefObject<EnemyInstance[]> }) => {
+interface PlayerProps {
+    enemiesRef?: React.MutableRefObject<EnemyInstance[]>;
+    collectiblesRef?: React.MutableRefObject<CollectibleInstance[]>;
+}
+
+export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   const mesh = useRef<THREE.Group>(null);
   const { camera } = useThree();
+  const [snowballs, setSnowballs] = useState<{id: string, pos: THREE.Vector3, vel: THREE.Vector3}[]>([]);
+
+  // Store Actions
   const decreaseWarmth = useGameStore((state) => state.decreaseWarmth);
+  const increaseWarmth = useGameStore((state) => state.increaseWarmth);
   const addScore = useGameStore((state) => state.addScore);
+  const playerForm = useGameStore((state) => state.playerForm);
+  const setPlayerForm = useGameStore((state) => state.setPlayerForm);
+  const addPhoto = useGameStore((state) => state.addPhoto);
+  const tickDeveloping = useGameStore((state) => state.tickDeveloping);
 
   // Physics state
   const velocity = useRef(new THREE.Vector3(0, 0, -10)); // Moving forward
   const position = useRef(new THREE.Vector3(0, 0, 0));
   const isJumping = useRef(false);
-  const isCrouching = useRef(false);
+  const lastPhotoTime = useRef(0);
 
   // Input state
   const keys = useRef<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => keys.current[e.code] = true;
+    const onKeyDown = (e: KeyboardEvent) => {
+        keys.current[e.code] = true;
+
+        if (e.code === 'KeyF') {
+            if (useGameStore.getState().playerForm === 'kitten') {
+                const spawnPos = position.current.clone().add(new THREE.Vector3(0, 1, -1));
+                const spawnVel = new THREE.Vector3(0, 2, -20);
+                spawnVel.z += velocity.current.z;
+                setSnowballs(prev => [...prev, { id: Math.random().toString(), pos: spawnPos, vel: spawnVel }]);
+            }
+        }
+    };
     const onKeyUp = (e: KeyboardEvent) => keys.current[e.code] = false;
 
-    // Touch handling placeholder
+    // Touch handling
     const onTouchStart = (e: TouchEvent) => {
-        // Simple logic: tap right/left side
         const x = e.touches[0].clientX;
-        if (x > window.innerWidth / 2) keys.current['ArrowRight'] = true;
+        // Center tap for fire?
+        if (x > window.innerWidth * 0.3 && x < window.innerWidth * 0.7) {
+             if (useGameStore.getState().playerForm === 'kitten') {
+                const spawnPos = position.current.clone().add(new THREE.Vector3(0, 1, -1));
+                const spawnVel = new THREE.Vector3(0, 2, -20);
+                spawnVel.z += velocity.current.z;
+                setSnowballs(prev => [...prev, { id: Math.random().toString(), pos: spawnPos, vel: spawnVel }]);
+            }
+        }
+        else if (x > window.innerWidth / 2) keys.current['ArrowRight'] = true;
         else keys.current['ArrowLeft'] = true;
+
+        // Multi-touch for jump
+        if (e.touches.length > 1) keys.current['Space'] = true;
     };
-    const onTouchEnd = () => {
+    const onTouchEnd = (e: TouchEvent) => {
         keys.current['ArrowRight'] = false;
         keys.current['ArrowLeft'] = false;
+        keys.current['Space'] = false;
     };
 
     window.addEventListener('keydown', onKeyDown);
@@ -54,9 +91,14 @@ export const Player = ({ enemiesRef }: { enemiesRef?: React.MutableRefObject<Ene
     if (!mesh.current) return;
 
     const dt = Math.min(delta, 0.1);
+    const time = state.clock.elapsedTime;
 
-    // Input handling
-    const speed = 20; // lateral speed
+    // Developing Photos Tick
+    tickDeveloping(dt * 10); // Develop 10% per second
+
+    // --- MOVEMENT ---
+    const baseSpeed = playerForm === 'snowman' ? 10 : 20;
+    const speed = baseSpeed;
     let targetX = position.current.x;
 
     if (keys.current['ArrowLeft'] || keys.current['KeyA']) {
@@ -68,19 +110,20 @@ export const Player = ({ enemiesRef }: { enemiesRef?: React.MutableRefObject<Ene
 
     // Smooth lateral movement
     position.current.x = lerp(position.current.x, targetX, dt * 5);
-    position.current.x = clamp(position.current.x, -18, 18); // Stay on track
+    position.current.x = clamp(position.current.x, -18, 18);
 
-    // Forward movement (always moving)
+    // Forward movement
     position.current.z += velocity.current.z * dt;
 
     // Terrain Following
-    // We need to know the height at current x, z
+    // TODO: Determine biome for height? defaulting to 'open_slope' for player physics locally
+    // Ideally we pass the biome in or query it efficiently.
     const terrainHeight = getHeightAt(position.current.x, position.current.z, 'open_slope');
 
-    // Jump logic
-    if (keys.current['Space'] || keys.current['ArrowUp']) {
+    // Jump logic (Disabled for Snowman?)
+    if (playerForm === 'kitten' && (keys.current['Space'] || keys.current['ArrowUp'])) {
         if (!isJumping.current && position.current.y <= terrainHeight + 0.5) {
-            velocity.current.y = 10;
+            velocity.current.y = 12;
             isJumping.current = true;
         }
     }
@@ -96,55 +139,158 @@ export const Player = ({ enemiesRef }: { enemiesRef?: React.MutableRefObject<Ene
 
     position.current.y += velocity.current.y * dt;
 
-    // Update mesh
+    // Update mesh position
     mesh.current.position.copy(position.current);
 
-    // Camera Follow
+    // --- CAMERA FOLLOW ---
     const cameraTargetPos = new THREE.Vector3(
-        position.current.x * 0.5, // Slight lateral follow
+        position.current.x * 0.5,
         position.current.y + 5,
         position.current.z + 10
     );
     camera.position.lerp(cameraTargetPos, dt * 5);
     camera.lookAt(position.current.x, position.current.y, position.current.z - 5);
 
-    // Update Game Store
-    if (state.clock.elapsedTime % 1 < dt) { // roughly once per second
-        decreaseWarmth(1);
-    }
-    addScore(Math.abs(velocity.current.z * dt)); // Score based on distance
+    // --- PHOTOGRAPHY ---
+    if (keys.current['KeyC'] && time - lastPhotoTime.current > 1.0) {
+        // Snap!
+        lastPhotoTime.current = time;
+        // Check for enemies in view
+        let captured = false;
 
-    // Combat / Collision
+        if (enemiesRef && enemiesRef.current) {
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+
+            enemiesRef.current.forEach(enemy => {
+                const toEnemy = new THREE.Vector3().subVectors(enemy.position, camera.position).normalize();
+                const dot = camDir.dot(toEnemy);
+                const dist = camera.position.distanceTo(enemy.position);
+
+                if (dot > 0.9 && dist < 50) {
+                    // Captured!
+                    addPhoto('enemy');
+                    addScore(500);
+                    enemy.hit(); // Maybe snapping them stuns/hurts?
+                    captured = true;
+                    // Flash effect?
+                }
+            });
+        }
+
+        if (!captured) {
+            addPhoto('glitch'); // Generic photo
+        }
+    }
+
+    // --- COMBAT / COLLISION ---
     if (enemiesRef && enemiesRef.current) {
         enemiesRef.current.forEach(enemy => {
             const dist = position.current.distanceTo(enemy.position);
             if (dist < 1.5) {
-                // Combat logic
-                // If kicking/jumping, kill enemy
-                // For now, auto-kill on contact for testing, or simple bump
-                enemy.hit();
-                addScore(100);
+                if (playerForm === 'snowman') {
+                    // Snowman crush!
+                    enemy.hit();
+                    addScore(200);
+                } else if (isJumping.current) {
+                     // Jump kick
+                     enemy.hit();
+                     addScore(100);
+                } else {
+                    // Get hit!
+                    decreaseWarmth(15);
+                    enemy.hit();
+                    // Chance to morph into snowman if hit by snowman-type
+                    if (enemy.type === 'snowman' && Math.random() > 0.5) {
+                        setPlayerForm('snowman');
+                    }
+                }
             }
         });
     }
 
-    // Rotation for flair
+    // --- COLLECTIBLES ---
+    if (collectiblesRef && collectiblesRef.current) {
+        collectiblesRef.current.forEach(item => {
+             const dist = position.current.distanceTo(item.position);
+             if (dist < 2.0) {
+                 if (item.type === 'cocoa') {
+                     increaseWarmth(30);
+                     if (playerForm === 'snowman') {
+                         setPlayerForm('kitten');
+                         addScore(500); // Bonus for cure
+                     }
+                 }
+                 item.collect();
+                 addScore(50);
+             }
+        });
+    }
+
+    // Rotation
     mesh.current.rotation.y = lerp(mesh.current.rotation.y, (targetX - position.current.x) * -0.1, dt * 5);
+    if (playerForm === 'snowman') {
+        mesh.current.rotation.x += velocity.current.z * dt * 0.5; // Rolling effect
+    } else {
+        mesh.current.rotation.x = 0;
+    }
+
+    // Warmth Drain
+    if (state.clock.elapsedTime % 1 < dt) {
+        decreaseWarmth(1);
+    }
+    addScore(Math.abs(velocity.current.z * dt));
   });
 
   return (
     <group ref={mesh}>
-        {/* Placeholder Kitten */}
-        <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="white" />
-        </mesh>
-        {/* Flip Phone Antenna */}
-        <mesh position={[0.4, 1, -0.2]}>
-            <boxGeometry args={[0.1, 0.5, 0.1]} />
-            <meshStandardMaterial color="black" />
-        </mesh>
-        {/* Glitch Particles (simple) */}
+        {/* SNOWBALLS */}
+        {snowballs.map(s => (
+            <Snowball
+                key={s.id}
+                position={s.pos}
+                velocity={s.vel}
+                enemiesRef={enemiesRef as React.MutableRefObject<EnemyInstance[]>}
+                onHit={() => {
+                    setSnowballs(prev => prev.filter(p => p.id !== s.id));
+                }}
+            />
+        ))}
+
+        {playerForm === 'kitten' ? (
+            <group>
+                {/* KITTEN MESH */}
+                <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+                    <boxGeometry args={[1, 1, 1]} />
+                    <meshStandardMaterial color="white" />
+                </mesh>
+                <mesh position={[0.4, 1, -0.2]}>
+                    <boxGeometry args={[0.1, 0.5, 0.1]} />
+                    <meshStandardMaterial color="black" />
+                </mesh>
+                 {/* Ears */}
+                <mesh position={[0.3, 1, 0]}>
+                    <coneGeometry args={[0.2, 0.4, 4]} />
+                    <meshStandardMaterial color="white" />
+                </mesh>
+                <mesh position={[-0.3, 1, 0]}>
+                    <coneGeometry args={[0.2, 0.4, 4]} />
+                    <meshStandardMaterial color="white" />
+                </mesh>
+            </group>
+        ) : (
+            <group>
+                {/* SNOWMAN MESH */}
+                 <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+                    <sphereGeometry args={[0.8, 16, 16]} />
+                    <meshStandardMaterial color="#EFF6FF" roughness={0.5} />
+                </mesh>
+                <mesh position={[0, 1.4, 0]}>
+                    <sphereGeometry args={[0.5, 16, 16]} />
+                    <meshStandardMaterial color="#EFF6FF" roughness={0.5} />
+                </mesh>
+            </group>
+        )}
     </group>
   );
 };

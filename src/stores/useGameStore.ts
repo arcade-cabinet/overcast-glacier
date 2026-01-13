@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 
 export type GameState = 'menu' | 'playing' | 'gameover' | 'paused';
+export type PlayerForm = 'kitten' | 'snowman';
 
 export interface Photo {
   id: string;
   timestamp: number;
   type: 'glitch' | 'enemy' | 'boss';
-  developed: boolean;
+  status: 'developing' | 'developed';
+  progress: number; // 0-100
 }
 
 interface GameStore {
@@ -14,6 +16,8 @@ interface GameStore {
   warmth: number;
   maxWarmth: number;
   gameState: GameState;
+  playerForm: PlayerForm;
+
   inventory: {
     hasCamera: boolean;
     hasSled: boolean;
@@ -23,11 +27,14 @@ interface GameStore {
 
   // Actions
   setGameState: (state: GameState) => void;
+  setPlayerForm: (form: PlayerForm) => void;
   addScore: (points: number) => void;
   decreaseWarmth: (amount: number) => void;
   increaseWarmth: (amount: number) => void;
-  addPhoto: (photo: Photo) => void;
-  developPhoto: (id: string) => void;
+
+  addPhoto: (type: Photo['type']) => void;
+  tickDeveloping: (amount: number) => void;
+
   resetGame: () => void;
 }
 
@@ -36,42 +43,72 @@ export const useGameStore = create<GameStore>((set) => ({
   warmth: 100,
   maxWarmth: 100,
   gameState: 'menu',
+  playerForm: 'kitten',
+
   inventory: {
-    hasCamera: true, // Start with camera for now
+    hasCamera: true,
     hasSled: false,
     photos: [],
-    filmRolls: 0,
+    filmRolls: 5, // Start with some film
   },
 
   setGameState: (state) => set({ gameState: state }),
+  setPlayerForm: (form) => set({ playerForm: form }),
+
   addScore: (points) => set((state) => ({ score: state.score + points })),
+
   decreaseWarmth: (amount) => set((state) => {
     const newWarmth = Math.max(0, state.warmth - amount);
-    if (newWarmth === 0 && state.gameState === 'playing') {
-      // Game Over condition could be triggered here or in the game loop
-      // For now just clamp
-    }
     return { warmth: newWarmth };
   }),
+
   increaseWarmth: (amount) => set((state) => ({ warmth: Math.min(state.maxWarmth, state.warmth + amount) })),
-  addPhoto: (photo) => set((state) => ({
-    inventory: { ...state.inventory, photos: [...state.inventory.photos, photo] }
+
+  addPhoto: (type) => set((state) => {
+      if (state.inventory.filmRolls <= 0) return {};
+
+      const newPhoto: Photo = {
+          id: Math.random().toString(36).substr(2, 9),
+          timestamp: Date.now(),
+          type,
+          status: 'developing',
+          progress: 0
+      };
+
+      return {
+          inventory: {
+              ...state.inventory,
+              filmRolls: state.inventory.filmRolls - 1,
+              photos: [...state.inventory.photos, newPhoto]
+          }
+      };
+  }),
+
+  tickDeveloping: (amount) => set((state) => ({
+      inventory: {
+          ...state.inventory,
+          photos: state.inventory.photos.map(p => {
+              if (p.status === 'developed') return p;
+              const newProgress = Math.min(100, p.progress + amount);
+              return {
+                  ...p,
+                  progress: newProgress,
+                  status: newProgress >= 100 ? 'developed' : 'developing'
+              };
+          })
+      }
   })),
-  developPhoto: (id) => set((state) => ({
-    inventory: {
-      ...state.inventory,
-      photos: state.inventory.photos.map(p => p.id === id ? { ...p, developed: true } : p)
-    }
-  })),
+
   resetGame: () => set({
     score: 0,
     warmth: 100,
     gameState: 'menu',
+    playerForm: 'kitten',
     inventory: {
       hasCamera: true,
       hasSled: false,
       photos: [],
-      filmRolls: 0,
+      filmRolls: 5,
     }
   })
 }));

@@ -2,6 +2,8 @@ import { Canvas } from '@react-three/fiber';
 import { Suspense } from 'react';
 import { MountainScene } from '../scenes/MountainScene';
 import { Stars, Cloud } from '@react-three/drei';
+import { EffectComposer, Bloom, Glitch, Vignette } from '@react-three/postprocessing';
+import { BlendFunction, GlitchMode } from 'postprocessing';
 
 export const GameCanvas = () => {
   return (
@@ -25,6 +27,21 @@ export const GameCanvas = () => {
             <Cloud position={[0, 10, -20]} opacity={0.5} />
 
             <MountainScene />
+
+            {/* Post Processing */}
+            <EffectComposer>
+                <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.9} height={300} intensity={1.5} />
+                <Vignette eskil={false} offset={0.1} darkness={0.5} />
+                {/* Subtle Glitch occasionally */}
+                <Glitch
+                    delay={[5, 10]}
+                    duration={[0.1, 0.3]}
+                    strength={[0.1, 0.2]}
+                    mode={GlitchMode.SPORADIC}
+                    active
+                    ratio={0.85}
+                />
+            </EffectComposer>
         </Suspense>
       </Canvas>
     </div>
