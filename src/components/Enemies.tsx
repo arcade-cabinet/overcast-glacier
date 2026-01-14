@@ -1,11 +1,11 @@
-import { useRef, useState, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-import { EnemyInstance, EnemyType } from '../types';
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { type EnemyInstance, EnemyType } from "../types";
 
 interface EnemyProps {
-    position: [number, number, number];
-    onRegister: (instance: EnemyInstance) => () => void;
+  position: [number, number, number];
+  onRegister: (instance: EnemyInstance) => () => void;
 }
 
 // --- SNOWMAN ---
@@ -16,10 +16,12 @@ export const Snowman = ({ position, onRegister }: EnemyProps) => {
   useEffect(() => {
     if (!active) return;
     const instance: EnemyInstance = {
-        id: Math.random().toString(),
-        position: new THREE.Vector3(...position),
-        type: 'snowman',
-        hit: () => { setActive(false); }
+      id: Math.random().toString(),
+      position: new THREE.Vector3(...position),
+      type: "snowman",
+      hit: () => {
+        setActive(false);
+      },
     };
     return onRegister(instance);
   }, [active, onRegister, position]);
@@ -46,7 +48,7 @@ export const Snowman = ({ position, onRegister }: EnemyProps) => {
         <cylinderGeometry args={[0.05, 0.05, 0.6]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
-       <mesh position={[-0.4, 0.8, 0]} rotation={[0, 0, 0.5]}>
+      <mesh position={[-0.4, 0.8, 0]} rotation={[0, 0, 0.5]}>
         <cylinderGeometry args={[0.05, 0.05, 0.6]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
@@ -62,10 +64,12 @@ export const PolarBear = ({ position, onRegister }: EnemyProps) => {
   useEffect(() => {
     if (!active) return;
     const instance: EnemyInstance = {
-        id: Math.random().toString(),
-        position: new THREE.Vector3(...position),
-        type: 'polar_bear',
-        hit: () => { setActive(false); }
+      id: Math.random().toString(),
+      position: new THREE.Vector3(...position),
+      type: "polar_bear",
+      hit: () => {
+        setActive(false);
+      },
     };
     return onRegister(instance);
   }, [active, onRegister, position]);
@@ -73,7 +77,9 @@ export const PolarBear = ({ position, onRegister }: EnemyProps) => {
   useFrame((state) => {
     if (!active || !mesh.current) return;
     // Breathing / Roaring animation
-    mesh.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2) * 0.05);
+    mesh.current.scale.setScalar(
+      1 + Math.sin(state.clock.elapsedTime * 2) * 0.05,
+    );
   });
 
   if (!active) return null;
@@ -119,10 +125,12 @@ export const GlitchImp = ({ position, onRegister }: EnemyProps) => {
   useEffect(() => {
     if (!active) return;
     const instance: EnemyInstance = {
-        id: Math.random().toString(),
-        position: new THREE.Vector3(...position),
-        type: 'glitch_imp',
-        hit: () => { setActive(false); }
+      id: Math.random().toString(),
+      position: new THREE.Vector3(...position),
+      type: "glitch_imp",
+      hit: () => {
+        setActive(false);
+      },
     };
     return onRegister(instance);
   }, [active, onRegister, position]);
@@ -130,7 +138,8 @@ export const GlitchImp = ({ position, onRegister }: EnemyProps) => {
   useFrame((state) => {
     if (!active || !mesh.current) return;
     // Erratic movement
-    mesh.current.position.y = position[1] + 2 + Math.sin(state.clock.elapsedTime * 10) * 0.5;
+    mesh.current.position.y =
+      position[1] + 2 + Math.sin(state.clock.elapsedTime * 10) * 0.5;
     mesh.current.rotation.x += 0.1;
     mesh.current.rotation.y += 0.2;
   });
