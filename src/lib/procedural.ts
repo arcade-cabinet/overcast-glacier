@@ -25,7 +25,7 @@ export const getBiomeAt = (z: number): BiomeType => {
 
 export const getHeightAt = (x: number, z: number, biome: BiomeType): number => {
   const baseNoise = noise2D(x * 0.05, z * 0.02) * 2;
-  const slope = - (z * 0.2); // Base downhill slope
+  const slope = z * 0.2; // Base downhill slope (z is negative, so result is negative)
 
   switch (biome) {
     case 'open_slope':

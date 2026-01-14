@@ -6,7 +6,10 @@ import { useState } from 'react';
 export const HUD = () => {
     const score = useGameStore(state => state.score);
     const warmth = useGameStore(state => state.warmth);
+    const gameState = useGameStore(state => state.gameState);
     const [phoneOpen, setPhoneOpen] = useState(false);
+
+    if (gameState !== 'playing') return null;
 
     return (
         <div className="absolute inset-0 pointer-events-none">

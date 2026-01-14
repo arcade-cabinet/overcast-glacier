@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0F172A;
+  --color-accent-ice: #7DD3FC;
+  --color-snow-white: #F8FAFC;
+  --color-glacier-blue: #1E40AF;
+  --color-frost-highlight: #60A5FA;
+  --color-warning-red: #EF4444;
+  --color-hot-cocoa: #8B4513;
+  --color-matrix-green: #10B981;
+
+  --font-heading: "Orbitron", sans-serif;
+  --font-body: "VT323", monospace;
+  --font-accent: "Luckiest Guy", cursive;
+}
+
+/* Global Styles */
+body {
+    background-color: var(--color-primary);
+    color: var(--color-snow-white);
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    height: 100vh;
+    width: 100vw;
+    overscroll-behavior-y: none;
+    font-family: var(--font-heading);
+}
+
+.drop-shadow-glow {
+    filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.8));
+}

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type GameState = 'menu' | 'playing' | 'gameover' | 'paused';
+export type GameState = 'initial' | 'menu' | 'playing' | 'gameover' | 'paused';
 export type PlayerForm = 'kitten' | 'snowman';
 
 export interface Photo {
@@ -42,7 +42,7 @@ export const useGameStore = create<GameStore>((set) => ({
   score: 0,
   warmth: 100,
   maxWarmth: 100,
-  gameState: 'menu',
+  gameState: 'initial',
   playerForm: 'kitten',
 
   inventory: {
