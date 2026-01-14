@@ -39,7 +39,7 @@ export const GameCanvas = () => {
         camera={{ position: [0, 5, 10], fov: 60 }}
         shadows
         dpr={[1, 2]}
-        gl={{ antialias: false, stencil: false, depth: true }}
+        gl={{ antialias: false, stencil: false, depth: true, preserveDrawingBuffer: true }}
       >
         <Resize />
         <Suspense fallback={null}>
