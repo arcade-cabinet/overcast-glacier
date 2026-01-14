@@ -3,6 +3,7 @@ import { Motion } from "@capacitor/motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { AudioSystem } from "../lib/audio";
 import { getHeightAt } from "../lib/procedural";
 import { clamp, lerp } from "../lib/utils";
 import { useGameStore } from "../stores/useGameStore";
@@ -35,7 +36,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   const position = useRef(new THREE.Vector3(0, 0, 0));
   const isJumping = useRef(false);
   const lastPhotoTime = useRef(0);
-  
+
   // Motion State
   const tilt = useRef(0); // -1 to 1 based on gamma
 
@@ -75,21 +76,21 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   useEffect(() => {
     // Motion Listeners
     let accelHandler: any;
-    
+
     const setupMotion = async () => {
-        try {
-            accelHandler = await Motion.addListener('accel', event => {
-                // Use X acceleration for tilt (steering)
-                // x is roughly -10 to 10 when tilted 90 degrees
-                // We want to map roughly -3 to 3 to full steer
-                if (event.accelerationIncludingGravity) {
-                    const x = event.accelerationIncludingGravity.x || 0;
-                    tilt.current = clamp(-x / 3, -1, 1);
-                }
-            });
-        } catch (e) {
-            console.error("Motion not supported", e);
-        }
+      try {
+        accelHandler = await Motion.addListener("accel", (event) => {
+          // Use X acceleration for tilt (steering)
+          // x is roughly -10 to 10 when tilted 90 degrees
+          // We want to map roughly -3 to 3 to full steer
+          if (event.accelerationIncludingGravity) {
+            const x = event.accelerationIncludingGravity.x || 0;
+            tilt.current = clamp(-x / 3, -1, 1);
+          }
+        });
+      } catch (e) {
+        console.error("Motion not supported", e);
+      }
     };
     setupMotion();
 
@@ -99,13 +100,13 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
       // Tap Left side: Jump
       // Tap Right side: Fire
       // (Steering is handled by tilt)
-      
+
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         if (t.clientX > window.innerWidth / 2) {
-            spawnSnowball();
+          spawnSnowball();
         } else {
-            jump();
+          jump();
         }
       }
     };
@@ -116,7 +117,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
       if (accelHandler) accelHandler.remove();
       window.removeEventListener("touchstart", onTouchStart);
     };
-  }, [playerForm]); // Re-bind if needed, but refs cover most state
+  }, [jump, spawnSnowball]); // Re-bind if needed, but refs cover most state
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -129,10 +130,10 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
 
     // --- MOVEMENT ---
     const baseSpeed = playerForm === "snowman" ? 10 : 20;
-    
+
     // Apply tilt to horizontal velocity
     // Smooth out the tilt value
-    let targetX = position.current.x + (tilt.current * baseSpeed * dt * 2);
+    const targetX = position.current.x + tilt.current * baseSpeed * dt * 2;
 
     // Smooth lateral movement
     position.current.x = lerp(position.current.x, targetX, dt * 5);
@@ -175,12 +176,45 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
       position.current.z - 5,
     );
 
-    // --- AUTOMATIC PHOTO ---
-    // Instead of C key, maybe double tap or just auto-snap special moments?
-    // For now, let's make it automatic when near a boss or special enemy
-    // Or add a dedicated on-screen button in HUD (which calls store action)
-    // Here we check for manual trigger via store if we add one, or keep logic simpler.
-    
+    // --- PHOTOGRAPHY ---
+    // Using simple dot product check instead of raycaster for performance on mobile
+    if (keys.current["KeyC"] && time - lastPhotoTime.current > 1.0) {
+      lastPhotoTime.current = time;
+
+      if (useGameStore.getState().inventory.filmRolls > 0) {
+        AudioSystem.playSFX("sfx_camera");
+        Haptics.impact({ style: ImpactStyle.Heavy });
+
+        let captured = false;
+
+        if (enemiesRef?.current) {
+          const camDir = new THREE.Vector3();
+          camera.getWorldDirection(camDir);
+
+          enemiesRef.current.forEach((enemy) => {
+            const toEnemy = new THREE.Vector3()
+              .subVectors(enemy.position, camera.position)
+              .normalize();
+            const dot = camDir.dot(toEnemy);
+            const dist = camera.position.distanceTo(enemy.position);
+
+            if (dot > 0.9 && dist < 50) {
+              addPhoto("enemy");
+              addScore(500);
+              enemy.hit();
+              captured = true;
+            }
+          });
+        }
+
+        if (!captured) {
+          addPhoto("glitch");
+        }
+      } else {
+        // Out of film feedback?
+      }
+    }
+
     // --- COMBAT / COLLISION ---
     if (enemiesRef?.current) {
       enemiesRef.current.forEach((enemy) => {
@@ -216,7 +250,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
             increaseWarmth(30);
             if (playerForm === "snowman") {
               setPlayerForm("kitten");
-              addScore(500); 
+              addScore(500);
             }
           }
           item.collect();

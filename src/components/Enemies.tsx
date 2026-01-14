@@ -28,18 +28,18 @@ export const Snowman = ({ entity, onRegister }: EnemyProps) => {
 
   useFrame((state) => {
     if (!active || !mesh.current) return;
-    
+
     // Rotation based on movement
     if (Math.abs(entity.velocity.x) > 0.1) {
-        mesh.current.rotation.y = THREE.MathUtils.lerp(
-            mesh.current.rotation.y, 
-            entity.velocity.x > 0 ? Math.PI : 0, 
-            0.1
-        );
-        // Rolling wobble
-        mesh.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * 0.1;
+      mesh.current.rotation.y = THREE.MathUtils.lerp(
+        mesh.current.rotation.y,
+        entity.velocity.x > 0 ? Math.PI : 0,
+        0.1,
+      );
+      // Rolling wobble
+      mesh.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * 0.1;
     } else {
-        mesh.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.05;
+      mesh.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.05;
     }
   });
 
@@ -88,14 +88,14 @@ export const PolarBear = ({ entity, onRegister }: EnemyProps) => {
 
   useFrame((state) => {
     if (!active || !mesh.current) return;
-    
+
     // Look at movement direction
     if (Math.abs(entity.velocity.x) > 0.1) {
-        mesh.current.rotation.y = THREE.MathUtils.lerp(
-            mesh.current.rotation.y, 
-            entity.velocity.x > 0 ? Math.PI / 2 : -Math.PI / 2, 
-            0.1
-        );
+      mesh.current.rotation.y = THREE.MathUtils.lerp(
+        mesh.current.rotation.y,
+        entity.velocity.x > 0 ? Math.PI / 2 : -Math.PI / 2,
+        0.1,
+      );
     }
 
     // Breathing / Roaring animation

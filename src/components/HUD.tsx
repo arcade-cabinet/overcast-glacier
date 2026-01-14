@@ -30,10 +30,12 @@ export const HUD = () => {
         {/* Warmth Meter */}
         <div className="bg-black/50 backdrop-blur-md p-3 rounded-2xl border border-accent-ice/30 w-[40vw] max-w-xs flex flex-col justify-center">
           <div className="flex justify-between items-center mb-1">
-             <div className="text-[10px] sm:text-xs text-accent-ice font-heading uppercase">
-                Warmth
-             </div>
-             <div className="text-[10px] text-white/80">{Math.round(warmth)}%</div>
+            <div className="text-[10px] sm:text-xs text-accent-ice font-heading uppercase">
+              Warmth
+            </div>
+            <div className="text-[10px] text-white/80">
+              {Math.round(warmth)}%
+            </div>
           </div>
           <div className="h-3 sm:h-4 bg-gray-800 rounded-full overflow-hidden">
             <div
@@ -66,7 +68,7 @@ export const HUD = () => {
       {/* Touch Hints (Optional, visible briefly on start?) */}
       <div className="absolute inset-x-0 bottom-8 flex justify-center opacity-50 pointer-events-none">
         <div className="text-white/50 text-xs font-heading tracking-widest hidden sm:block">
-            TILT TO STEER • TAP LEFT TO JUMP • TAP RIGHT TO SHOOT
+          TILT TO STEER • TAP LEFT TO JUMP • TAP RIGHT TO SHOOT
         </div>
       </div>
     </div>

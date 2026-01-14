@@ -1,9 +1,9 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.arcadecabinet.overcastglaciers',
-  appName: 'Overcast Glaciers',
-  webDir: 'dist',
+  appId: "com.arcadecabinet.overcastglaciers",
+  appName: "Overcast Glaciers",
+  webDir: "dist",
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
@@ -12,9 +12,9 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
     },
     StatusBar: {
-        style: 'DARK',
-        backgroundColor: '#0F172A',
-    }
+      style: "DARK",
+      backgroundColor: "#0F172A",
+    },
   },
 };
 

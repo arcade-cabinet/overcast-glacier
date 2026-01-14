@@ -14,23 +14,28 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
       {/* Top Screen */}
       <div className="flex-1 p-4 bg-primary border-b-8 border-gray-800 relative overflow-hidden flex flex-col">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-        
+
         {/* Status Bar */}
         <div className="bg-glacier-blue/20 p-2 mb-3 rounded-lg text-[10px] font-heading text-accent-ice flex justify-between shrink-0">
-            <span>SIGNAL: 100%</span>
-            <span>BAT: 99%</span>
+          <span>SIGNAL: 100%</span>
+          <span>BAT: 99%</span>
         </div>
 
         {/* Message List */}
         <div className="flex-1 overflow-y-auto space-y-3 font-body text-green-400 text-sm scrollbar-thin scrollbar-thumb-gray-700">
-            {messages.map((msg, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Static
-              <div key={i} className="bg-green-900/20 p-2 rounded-lg border border-green-500/20">
-                <span className="font-bold text-green-300 block text-xs mb-1">{msg.sender}:</span>
-                <span className="leading-snug">{msg.text}</span>
-              </div>
-            ))}
-            <div className="animate-pulse text-green-500">_</div>
+          {messages.map((msg, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Static
+            <div
+              key={i}
+              className="bg-green-900/20 p-2 rounded-lg border border-green-500/20"
+            >
+              <span className="font-bold text-green-300 block text-xs mb-1">
+                {msg.sender}:
+              </span>
+              <span className="leading-snug">{msg.text}</span>
+            </div>
+          ))}
+          <div className="animate-pulse text-green-500">_</div>
         </div>
       </div>
 

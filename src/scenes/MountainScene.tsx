@@ -12,14 +12,14 @@ import {
 import { randomRange } from "../lib/utils";
 import type { EnemyType } from "../types";
 
-const BOSS_SPAWN_Z = 1000; // Distance to boss
+const BOSS_SPAWN_Z = 1000;
 
 const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
   const mesh = useRef<THREE.Mesh>(null);
 
-  const { positions, indices, biomeColor } = useMemo(() => {
-    const segments = 20;
-    const width = 40;
+  const { positions, indices, biomeColor, biome } = useMemo(() => {
+    const segments = 32; // Higher resolution for production
+    const width = 60;
     const depth = CHUNK_SIZE;
 
     const positions = [];
@@ -34,7 +34,7 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
         const v = z / segments;
 
         const px = (u - 0.5) * width;
-        const pz = (v - 0.5) * depth - zOffset;
+        const pz = v * -depth - zOffset;
         const py = getHeightAt(px, pz, biome);
 
         positions.push(px, py, pz);
@@ -57,32 +57,27 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
       positions: new Float32Array(positions),
       indices: indices,
       biomeColor: getBiomeColor(biome),
+      biome,
     };
   }, [zOffset]);
 
-  // SPAWN ENTITIES ON MOUNT (Once)
+  // SPAWN ENTITIES
   useEffect(() => {
-    const centerZ = -zOffset - CHUNK_SIZE / 2;
-    const biome = getBiomeAt(centerZ);
-
-    const entities = [];
-    const enemyCount = Math.floor(randomRange(1, 5));
+    const entities: any[] = [];
+    const enemyCount = biome === "summit" ? 0 : Math.floor(randomRange(2, 6));
 
     for (let i = 0; i < enemyCount; i++) {
-      const ex = randomRange(-10, 10);
+      const ex = randomRange(-15, 15);
       const ez = -zOffset - randomRange(10, CHUNK_SIZE - 10);
       const ey = getHeightAt(ex, ez, biome);
 
       let type: EnemyType = "snowman";
       const r = Math.random();
       if (biome === "ice_cave") type = r > 0.4 ? "glitch_imp" : "snowman";
-      else if (biome === "cocoa_valley")
-        type = r > 0.3 ? "polar_bear" : "snowman";
-      else if (biome === "summit") type = r > 0.5 ? "glitch_imp" : "polar_bear";
+      else if (biome === "frozen_rink") type = "snowman";
       else {
         if (r > 0.9) type = "glitch_imp";
-        else if (r > 0.8) type = "polar_bear";
-        else type = "snowman";
+        else if (r > 0.7) type = "polar_bear";
       }
 
       const entity = world.add({
@@ -96,15 +91,16 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
       entities.push(entity);
     }
 
-    if (biome === "cocoa_valley" || Math.random() > 0.7) {
-      const cx = randomRange(-8, 8);
+    // Spawn Cocoa
+    if (biome === "cocoa_valley" || Math.random() > 0.8) {
+      const cx = randomRange(-10, 10);
       const cz = -zOffset - randomRange(10, CHUNK_SIZE - 10);
       const cy = getHeightAt(cx, cz, biome);
 
       const entity = world.add({
         tag: "collectible",
         position: new THREE.Vector3(cx, cy, cz),
-        radius: 0.5,
+        radius: 0.8,
         collectibleType: "cocoa",
       });
       entities.push(entity);
@@ -113,11 +109,11 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
     return () => {
       for (const e of entities) world.remove(e);
     };
-  }, [zOffset]);
+  }, [zOffset, biome]);
 
   return (
     <group>
-      <mesh ref={mesh} receiveShadow>
+      <mesh ref={mesh} receiveShadow castShadow>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -128,12 +124,24 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
           <bufferAttribute
             attach="index"
             count={indices.length}
-            array={new Uint16Array(indices)}
+            array={new Uint32Array(indices)}
             itemSize={1}
           />
         </bufferGeometry>
-        <meshStandardMaterial color={biomeColor} roughness={0.8} flatShading />
+        <meshStandardMaterial
+          color={biomeColor}
+          roughness={0.8}
+          metalness={0.1}
+          flatShading
+        />
       </mesh>
+
+      {/* Visual Glitch Shards for Ice Cave */}
+      {biome === "ice_cave" && (
+        <group position={[0, 0, -zOffset - CHUNK_SIZE / 2]}>
+          {/* Add some procedural icicles here if needed */}
+        </group>
+      )}
     </group>
   );
 };
@@ -149,15 +157,12 @@ export const MountainScene = () => {
 
   useFrame(() => {
     const z = camera.position.z;
-    const forwardEdge = z - CHUNK_SIZE * 2;
+    const forwardEdge = -lastChunkRef.current;
 
-    if (lastChunkRef.current > Math.abs(forwardEdge)) {
-      const currentFurthestChunk = chunks[chunks.length - 1];
-      if (Math.abs(z) > currentFurthestChunk - CHUNK_SIZE) {
-        const newChunk = currentFurthestChunk + CHUNK_SIZE;
-        setChunks((prev) => [...prev.slice(1), newChunk]);
-        lastChunkRef.current = newChunk;
-      }
+    if (z < forwardEdge + CHUNK_SIZE) {
+      const nextOffset = lastChunkRef.current + CHUNK_SIZE;
+      setChunks((prev) => [...prev.slice(1), nextOffset]);
+      lastChunkRef.current = nextOffset;
     }
   });
 
@@ -166,7 +171,7 @@ export const MountainScene = () => {
       {chunks.map((offset) => (
         <TerrainChunk key={offset} zOffset={offset} />
       ))}
-      <SnowEmperor position={[0, 0, -BOSS_SPAWN_Z]} />
+      <SnowEmperor position={[0, -BOSS_SPAWN_Z * 0.1, -BOSS_SPAWN_Z]} />
     </group>
   );
 };

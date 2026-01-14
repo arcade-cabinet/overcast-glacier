@@ -27,16 +27,17 @@ export const MainMenu = () => {
           ENTER SIMULATION
         </button>
 
-        <button 
-            type="button" 
-            className="bg-gray-800/80 text-white font-body text-lg py-4 rounded-xl border border-gray-600 active:bg-gray-700 active:scale-95 transition-all touch-manipulation"
+        <button
+          type="button"
+          className="bg-gray-800/80 text-white font-body text-lg py-4 rounded-xl border border-gray-600 active:bg-gray-700 active:scale-95 transition-all touch-manipulation"
         >
           SETTINGS
         </button>
       </div>
 
       <div className="mt-12 text-white/70 font-body tracking-widest text-sm">
-        LAST RUN: <span className="text-accent-ice font-bold">{Math.floor(score)}</span>
+        LAST RUN:{" "}
+        <span className="text-accent-ice font-bold">{Math.floor(score)}</span>
       </div>
     </div>
   );

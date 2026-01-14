@@ -1,7 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
 import * as YUKA from "yuka";
-import { ChaseState, EnemyVehicle, IdleState, PatrolState } from "../lib/ai/EnemyAI";
+import {
+  ChaseState,
+  EnemyVehicle,
+  IdleState,
+  PatrolState,
+} from "../lib/ai/EnemyAI";
 import { getBiomeAt, getHeightAt } from "../lib/procedural";
 import { useGameStore } from "../stores/useGameStore";
 import { world } from "./world";
@@ -49,16 +53,22 @@ export const AISystem = () => {
   // Map ECS Entity -> Yuka Vehicle
   const entityMap = new Map<any, EnemyVehicle>();
   // Player proxy in Yuka world (so enemies can seek it)
-  const playerGameEntity = new YUKA.GameEntity(); 
+  const playerGameEntity = new YUKA.GameEntity();
   entityManager.add(playerGameEntity);
 
   useFrame((_state, delta) => {
     const dt = Math.min(delta, 0.1);
-    
+
     // Sync Player Position to Yuka
-    const player = world.with("tag", "position").where(e => e.tag === "player").first;
+    const player = world
+      .with("tag", "position")
+      .where((e) => e.tag === "player").first;
     if (player) {
-        playerGameEntity.position.set(player.position.x, player.position.y, player.position.z);
+      playerGameEntity.position.set(
+        player.position.x,
+        player.position.y,
+        player.position.z,
+      );
     }
 
     // Sync Enemies
@@ -66,34 +76,39 @@ export const AISystem = () => {
     const activeEntities = new Set<any>();
 
     for (const enemy of enemies) {
-        activeEntities.add(enemy);
-        
-        let vehicle = entityMap.get(enemy);
-        if (!vehicle) {
-            // Create new Vehicle
-            vehicle = new EnemyVehicle(enemy.enemyType);
-            vehicle.position.set(enemy.position.x, enemy.position.y, enemy.position.z);
-            vehicle.playerRef = playerGameEntity;
+      activeEntities.add(enemy);
 
-            // Setup States
-            const idleState = new IdleState();
-            const chaseState = new ChaseState();
-            const patrolState = new PatrolState();
+      let vehicle = entityMap.get(enemy);
+      if (!vehicle) {
+        // Create new Vehicle with typed enemyType
+        // @ts-expect-error - enemyType is string in ECS, but typed in Vehicle. Cast or validate.
+        vehicle = new EnemyVehicle(enemy.enemyType);
+        vehicle.position.set(
+          enemy.position.x,
+          enemy.position.y,
+          enemy.position.z,
+        );
+        vehicle.playerRef = playerGameEntity;
 
-            vehicle.stateMachine.add("IDLE", idleState);
-            vehicle.stateMachine.add("CHASE", chaseState);
-            vehicle.stateMachine.add("PATROL", patrolState);
-            
-            vehicle.stateMachine.changeTo("IDLE");
+        // Setup States
+        const idleState = new IdleState();
+        const chaseState = new ChaseState();
+        const patrolState = new PatrolState();
 
-            entityManager.add(vehicle);
-            entityMap.set(enemy, vehicle);
-        }
+        vehicle.stateMachine.add("IDLE", idleState);
+        vehicle.stateMachine.add("CHASE", chaseState);
+        vehicle.stateMachine.add("PATROL", patrolState);
 
-        // 1. Sync Physics -> Yuka (If external physics affected position, e.g. collisions/teleport)
-        // Actually, Yuka drives velocity for X/Z. We let PhysicsSystem handle Y (gravity).
-        // So we sync Y from ECS to Yuka so Yuka knows 3D distance?
-        vehicle.position.y = enemy.position.y; 
+        vehicle.stateMachine.changeTo("IDLE");
+
+        entityManager.add(vehicle);
+        entityMap.set(enemy, vehicle);
+      }
+
+      // 1. Sync Physics -> Yuka (If external physics affected position, e.g. collisions/teleport)
+      // Actually, Yuka drives velocity for X/Z. We let PhysicsSystem handle Y (gravity).
+      // So we sync Y from ECS to Yuka so Yuka knows 3D distance?
+      vehicle.position.y = enemy.position.y;
     }
 
     // Update Yuka
@@ -101,26 +116,26 @@ export const AISystem = () => {
 
     // Sync Yuka -> ECS
     for (const enemy of enemies) {
-        const vehicle = entityMap.get(enemy);
-        if (vehicle) {
-            // Copy calculated velocity from Yuka to ECS
-            // We preserve ECS Y velocity (gravity)
-            enemy.velocity.x = vehicle.velocity.x;
-            enemy.velocity.z = vehicle.velocity.z;
-            
-            // Or if Yuka manages position integration completely (for X/Z):
-            // enemy.position.x = vehicle.position.x;
-            // enemy.position.z = vehicle.position.z;
-            // But PhysicsSystem does "position.addScaledVector(velocity)", so passing velocity is better integration.
-        }
+      const vehicle = entityMap.get(enemy);
+      if (vehicle) {
+        // Copy calculated velocity from Yuka to ECS
+        // We preserve ECS Y velocity (gravity)
+        enemy.velocity.x = vehicle.velocity.x;
+        enemy.velocity.z = vehicle.velocity.z;
+
+        // Or if Yuka manages position integration completely (for X/Z):
+        // enemy.position.x = vehicle.position.x;
+        // enemy.position.z = vehicle.position.z;
+        // But PhysicsSystem does "position.addScaledVector(velocity)", so passing velocity is better integration.
+      }
     }
 
     // Cleanup dead entities
     for (const [entity, vehicle] of entityMap) {
-        if (!activeEntities.has(entity)) {
-            entityManager.remove(vehicle);
-            entityMap.delete(entity);
-        }
+      if (!activeEntities.has(entity)) {
+        entityManager.remove(vehicle);
+        entityMap.delete(entity);
+      }
     }
   });
 

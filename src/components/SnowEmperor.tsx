@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type * as THREE from "three";
 import { useGameStore } from "../stores/useGameStore";
 
@@ -9,82 +9,116 @@ export const SnowEmperor = ({
   position: [number, number, number];
 }) => {
   const group = useRef<THREE.Group>(null);
-  const [phase, _setPhase] = useState(1);
-  const [health, _setHealth] = useState(100);
-  const _addScore = useGameStore((state) => state.addScore);
+  const coreMesh = useRef<THREE.Mesh>(null);
 
-  // Floating animation
+  const bossHealth = useGameStore((state) => state.bossHealth);
+  const bossPhase = useGameStore((state) => state.bossPhase);
+  const _damageBoss = useGameStore((state) => state.damageBoss);
+  const setBossPhase = useGameStore((state) => state.setBossPhase);
+  const setGameState = useGameStore((state) => state.setGameState);
+
+  // Floating shards logic
+  const shardCount = 12;
+  const shards = useMemo(() => Array.from({ length: shardCount }), []);
+
   useFrame((state) => {
     if (!group.current) return;
 
     const time = state.clock.elapsedTime;
 
-    // Base movement
-    group.current.position.y = position[1] + Math.sin(time) * 2;
-    group.current.rotation.y += 0.005;
+    // Update Phase based on health
+    if (bossHealth <= 75 && bossPhase === 1) setBossPhase(2);
+    if (bossHealth <= 50 && bossPhase === 2) setBossPhase(3);
+    if (bossHealth <= 25 && bossPhase === 3) setBossPhase(4);
+    if (bossHealth <= 0) setGameState("victory");
 
-    // Phase behavior
-    if (phase === 2) {
-      // Agitated shake
-      group.current.position.x = position[0] + Math.sin(time * 10) * 0.5;
-    } else if (phase === 3) {
-      // Glitchy Teleport (Visual only for now)
-      if (Math.random() > 0.95) {
-        group.current.position.x = (Math.random() - 0.5) * 10;
+    // Base Floating & Rotation
+    group.current.position.y = position[1] + Math.sin(time) * 1.5;
+    group.current.rotation.y += 0.005 * bossPhase;
+
+    // Core Animation
+    if (coreMesh.current) {
+      coreMesh.current.scale.setScalar(1 + Math.sin(time * 5) * 0.1);
+      if (bossPhase === 4) {
+        coreMesh.current.position.x = Math.sin(time * 20) * 0.2;
       }
+    }
+
+    // Phase 2+ Agitated shake
+    if (bossPhase >= 2) {
+      group.current.position.x =
+        position[0] + Math.sin(time * (bossPhase * 5)) * 0.2 * bossPhase;
     }
   });
 
   return (
     <group ref={group} position={position}>
-      {/* Health Bar (World Space) */}
-      <mesh position={[0, 12, 0]}>
-        <planeGeometry args={[10, 1]} />
-        <meshBasicMaterial color="black" />
-      </mesh>
-      <mesh position={[-5 + health / 20, 12, 0.1]}>
-        <planeGeometry args={[health / 10, 0.8]} />
-        <meshBasicMaterial color={health > 50 ? "#10B981" : "#EF4444"} />
-      </mesh>
-
-      {/* Throne Base */}
-      <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[5, 6, 2, 8]} />
-        <meshStandardMaterial color="#1E40AF" roughness={0.2} metalness={0.8} />
-      </mesh>
-
-      {/* The Emperor Body (Glitchy Ice) */}
-      <mesh position={[0, 5, 0]} castShadow>
-        <dodecahedronGeometry args={[3 + phase * 0.5, 0]} />
+      {/* Boss Core */}
+      <mesh ref={coreMesh} position={[0, 5, 0]} castShadow>
+        <dodecahedronGeometry args={[4, 0]} />
         <meshStandardMaterial
-          color={phase === 3 ? "#EF4444" : "#7DD3FC"}
-          emissive={phase === 3 ? "#7F1D1D" : "#7DD3FC"}
-          emissiveIntensity={0.5}
-          wireframe={phase === 3}
+          color={bossPhase === 4 ? "#EF4444" : "#7DD3FC"}
+          emissive={bossPhase >= 3 ? "#EF4444" : "#7DD3FC"}
+          emissiveIntensity={bossPhase * 0.5}
+          wireframe={bossPhase >= 3}
+          transparent
+          opacity={0.9}
         />
       </mesh>
 
-      {/* Core */}
+      {/* Internal "Glitch" Core */}
       <mesh position={[0, 5, 0]}>
-        <octahedronGeometry args={[1, 0]} />
+        <octahedronGeometry args={[1.5, 0]} />
         <meshBasicMaterial color="white" />
       </mesh>
 
-      {/* Floating Shards (Attack telegraphs) */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <mesh
-          // biome-ignore lint/suspicious/noArrayIndexKey: Static content
-          key={i}
-          position={[
-            Math.cos(i) * (6 + phase),
-            Math.sin(i) * (6 + phase) + 5,
-            0,
-          ]}
-        >
-          <tetrahedronGeometry args={[0.5]} />
-          <meshStandardMaterial color="#60A5FA" />
-        </mesh>
+      {/* Floating Shards (Defensive/Attack Orbit) */}
+      {shards.map((_, i) => (
+        <Shard key={i} index={i} total={shardCount} phase={bossPhase} />
       ))}
+
+      {/* Throne / Base */}
+      <mesh position={[0, -2, 0]} receiveShadow>
+        <cylinderGeometry args={[10, 12, 4, 8]} />
+        <meshStandardMaterial color="#1E3A8A" roughness={0.1} metalness={0.5} />
+      </mesh>
     </group>
+  );
+};
+
+const Shard = ({
+  index,
+  total,
+  phase,
+}: {
+  index: number;
+  total: number;
+  phase: number;
+}) => {
+  const mesh = useRef<THREE.Mesh>(null);
+  const angle = (index / total) * Math.PI * 2;
+
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const time = state.clock.elapsedTime;
+    const radius = 8 + Math.sin(time + index) * 1;
+    const speed = time * (0.5 + phase * 0.2);
+
+    mesh.current.position.x = Math.cos(angle + speed) * radius;
+    mesh.current.position.z = Math.sin(angle + speed) * radius;
+    mesh.current.position.y = 5 + Math.sin(time * 2 + index) * 2;
+
+    mesh.current.rotation.x += 0.02;
+    mesh.current.rotation.y += 0.03;
+  });
+
+  return (
+    <mesh ref={mesh}>
+      <tetrahedronGeometry args={[0.8]} />
+      <meshStandardMaterial
+        color={phase === 4 ? "#EF4444" : "#60A5FA"}
+        emissive={phase === 4 ? "#7F1D1D" : "#000000"}
+      />
+    </mesh>
   );
 };

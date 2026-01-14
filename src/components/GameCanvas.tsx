@@ -1,12 +1,17 @@
 import { Canvas } from "@react-three/fiber";
+import {
+  Bloom,
+  EffectComposer,
+  Noise,
+  Vignette,
+} from "@react-three/postprocessing";
 import { Suspense } from "react";
 import {
   CollectibleRenderer,
   EnemyRenderer,
   PlayerEntity,
 } from "../ecs/entities";
-// import { ECS } from '../ecs/world';
-import { CollisionSystem, PhysicsSystem, AISystem } from "../ecs/systems";
+import { AISystem, CollisionSystem, PhysicsSystem } from "../ecs/systems";
 import { MountainScene } from "../scenes/MountainScene";
 import { GlobalSnow } from "./GlobalSnow";
 import { ParallaxBackground } from "./ParallaxBackground";
@@ -15,14 +20,18 @@ import { Resize } from "./Resize";
 export const GameCanvas = () => {
   return (
     <div className="h-full w-full bg-primary relative">
-      <Canvas camera={{ position: [0, 5, 10], fov: 60 }} shadows dpr={[1, 2]}>
+      <Canvas
+        camera={{ position: [0, 5, 10], fov: 60 }}
+        shadows
+        dpr={[1, 2]}
+        gl={{ antialias: false, stencil: false, depth: true }}
+      >
         <Resize />
         <Suspense fallback={null}>
-          {/* ECS Provider removed as it might not exist in Miniplex 2? */}
-          <ambientLight intensity={0.5} color="#7DD3FC" />
+          <ambientLight intensity={0.4} color="#7DD3FC" />
           <directionalLight
             position={[10, 20, 10]}
-            intensity={1}
+            intensity={1.2}
             castShadow
             shadow-mapSize={[1024, 1024]}
           />
@@ -38,6 +47,17 @@ export const GameCanvas = () => {
           <PhysicsSystem />
           <AISystem />
           <CollisionSystem />
+
+          <EffectComposer disableNormalPass>
+            <Bloom
+              luminanceThreshold={0.2}
+              mipmapBlur
+              intensity={1.5}
+              radius={0.4}
+            />
+            <Noise opacity={0.05} />
+            <Vignette eskil={false} offset={0.1} darkness={1.1} />
+          </EffectComposer>
         </Suspense>
       </Canvas>
     </div>

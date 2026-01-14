@@ -1,17 +1,15 @@
 import * as YUKA from "yuka";
-import type * as THREE from "three";
-
-// We'll define a custom Vehicle that holds a reference to the ECS entity ID if needed,
-// but for now just standard Yuka is fine.
+import { GAME_CONFIG } from "../../config/gameConfig";
 
 export class EnemyVehicle extends YUKA.Vehicle {
-  public enemyType: string;
-  public playerRef: YUKA.GameEntity | null = null; // Target to chase
+  public enemyType: keyof typeof GAME_CONFIG.enemies;
+  public playerRef: YUKA.GameEntity | null = null;
 
-  constructor(type: string) {
+  constructor(type: keyof typeof GAME_CONFIG.enemies) {
     super();
     this.enemyType = type;
-    this.maxSpeed = type === "polar_bear" ? 8 : 5;
+    this.maxSpeed = GAME_CONFIG.enemies[type].speed;
+    this.boundingRadius = GAME_CONFIG.enemies[type].radius;
     // this.maxForce = 10;
     // this.mass = 1;
   }
@@ -29,10 +27,7 @@ export class IdleState extends YUKA.State<EnemyVehicle> {
       const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
       if (dist < 25) {
         vehicle.stateMachine.changeTo("CHASE");
-      } else if (
-        vehicle.enemyType === "glitch_imp" &&
-        Math.random() > 0.99
-      ) {
+      } else if (vehicle.enemyType === "glitch_imp" && Math.random() > 0.99) {
         vehicle.stateMachine.changeTo("PATROL");
       }
     }
@@ -41,10 +36,11 @@ export class IdleState extends YUKA.State<EnemyVehicle> {
 
 export class ChaseState extends YUKA.State<EnemyVehicle> {
   enter(vehicle: EnemyVehicle) {
-    // Add seek behavior
     if (vehicle.playerRef) {
       const seekBehavior = new YUKA.SeekBehavior(vehicle.playerRef.position);
       vehicle.steering.add(seekBehavior);
+
+      // Context Aware: If player is far, maybe sprint? (increase maxSpeed temporarily)
     }
   }
 
@@ -76,14 +72,13 @@ export class PatrolState extends YUKA.State<EnemyVehicle> {
 
   execute(vehicle: EnemyVehicle) {
     this.timer++;
-    
-    // Check for chase
+
     if (vehicle.playerRef) {
-        const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
-        if (dist < 25) {
-            vehicle.stateMachine.changeTo("CHASE");
-            return;
-        }
+      const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
+      if (dist < 25) {
+        vehicle.stateMachine.changeTo("CHASE");
+        return;
+      }
     }
 
     if (this.timer > 200 || Math.random() > 0.99) {

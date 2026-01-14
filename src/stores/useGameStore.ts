@@ -1,6 +1,13 @@
 import { create } from "zustand";
 
-export type GameState = "initial" | "menu" | "playing" | "gameover" | "paused";
+export type GameState =
+  | "initial"
+  | "menu"
+  | "playing"
+  | "gameover"
+  | "paused"
+  | "boss_intro"
+  | "victory";
 export type PlayerForm = "kitten" | "snowman";
 
 export interface Photo {
@@ -13,16 +20,30 @@ export interface Photo {
 
 interface GameStore {
   score: number;
+  highScore: number;
   warmth: number;
   maxWarmth: number;
   gameState: GameState;
   playerForm: PlayerForm;
+
+  // Boss State
+  bossHealth: number;
+  bossPhase: number;
 
   inventory: {
     hasCamera: boolean;
     hasSled: boolean;
     photos: Photo[];
     filmRolls: number;
+    matches: number;
+  };
+
+  // Stats for Achievements
+  stats: {
+    distanceTraveled: number;
+    enemiesDefeated: number;
+    photosTaken: number;
+    cocoaDrunk: number;
   };
 
   // Actions
@@ -32,34 +53,67 @@ interface GameStore {
   decreaseWarmth: (amount: number) => void;
   increaseWarmth: (amount: number) => void;
 
+  damageBoss: (amount: number) => void;
+  setBossPhase: (phase: number) => void;
+
   addPhoto: (type: Photo["type"]) => void;
   tickDeveloping: (amount: number) => void;
+  addFilm: (amount: number) => void;
+  addMatches: (amount: number) => void;
 
+  incrementStat: (stat: keyof GameStore["stats"]) => void;
   resetGame: () => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
   score: 0,
+  highScore: Number(localStorage.getItem("highScore") || 0),
   warmth: 100,
   maxWarmth: 100,
   gameState: "initial",
   playerForm: "kitten",
 
+  bossHealth: 100,
+  bossPhase: 1,
+
   inventory: {
     hasCamera: true,
     hasSled: false,
     photos: [],
-    filmRolls: 5, // Start with some film
+    filmRolls: 5,
+    matches: 0,
+  },
+
+  stats: {
+    distanceTraveled: 0,
+    enemiesDefeated: 0,
+    photosTaken: 0,
+    cocoaDrunk: 0,
   },
 
   setGameState: (state) => set({ gameState: state }),
   setPlayerForm: (form) => set({ playerForm: form }),
 
-  addScore: (points) => set((state) => ({ score: state.score + points })),
+  addScore: (points) =>
+    set((state) => {
+      const newScore = state.score + points;
+      if (newScore > state.highScore) {
+        localStorage.setItem("highScore", Math.floor(newScore).toString());
+        return { score: newScore, highScore: newScore };
+      }
+      return { score: newScore };
+    }),
+
+  damageBoss: (amount) =>
+    set((state) => ({ bossHealth: Math.max(0, state.bossHealth - amount) })),
+  setBossPhase: (phase) => set({ bossPhase: phase }),
 
   decreaseWarmth: (amount) =>
     set((state) => {
       const newWarmth = Math.max(0, state.warmth - amount);
+      if (newWarmth <= 0 && state.gameState === "playing") {
+        return { warmth: 0, gameState: "gameover" };
+      }
       return { warmth: newWarmth };
     }),
 
@@ -86,6 +140,7 @@ export const useGameStore = create<GameStore>((set) => ({
           filmRolls: state.inventory.filmRolls - 1,
           photos: [...state.inventory.photos, newPhoto],
         },
+        stats: { ...state.stats, photosTaken: state.stats.photosTaken + 1 },
       };
     }),
 
@@ -105,17 +160,47 @@ export const useGameStore = create<GameStore>((set) => ({
       },
     })),
 
+  addFilm: (amount) =>
+    set((state) => ({
+      inventory: {
+        ...state.inventory,
+        filmRolls: state.inventory.filmRolls + amount,
+      },
+    })),
+
+  addMatches: (amount) =>
+    set((state) => ({
+      inventory: {
+        ...state.inventory,
+        matches: state.inventory.matches + amount,
+      },
+    })),
+
+  incrementStat: (stat) =>
+    set((state) => ({
+      stats: { ...state.stats, [stat]: state.stats[stat] + 1 },
+    })),
+
   resetGame: () =>
-    set({
+    set((_state) => ({
       score: 0,
       warmth: 100,
       gameState: "menu",
       playerForm: "kitten",
+      bossHealth: 100,
+      bossPhase: 1,
       inventory: {
         hasCamera: true,
         hasSled: false,
         photos: [],
         filmRolls: 5,
+        matches: 0,
       },
-    }),
+      stats: {
+        distanceTraveled: 0,
+        enemiesDefeated: 0,
+        photosTaken: 0,
+        cocoaDrunk: 0,
+      },
+    })),
 }));

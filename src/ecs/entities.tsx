@@ -163,7 +163,9 @@ export const EnemyRenderer = ({
 }) => {
   const register = onRegister || (() => () => {});
   return (
-    <ECS.Entities in={ECS.world.with("tag", "enemyType", "position", "velocity")}>
+    <ECS.Entities
+      in={ECS.world.with("tag", "enemyType", "position", "velocity")}
+    >
       {(entity) => (
         <group position={entity.position}>
           {entity.enemyType === "snowman" && (
