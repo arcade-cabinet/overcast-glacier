@@ -141,3 +141,8 @@ package-lock.json
 
 .gemini/
 gha-creds-*.json
+
+# Test artifacts
+e2e-screenshots/
+playwright-report/
+test-results/
