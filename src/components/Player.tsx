@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { AudioSystem } from "../lib/audio/ProceduralAudio";
 import { getHeightAt } from "../lib/procedural";
+import { GameRNG } from "../lib/rng";
 import { clamp, lerp } from "../lib/utils";
 import { useGameStore } from "../stores/useGameStore";
 import type { CollectibleInstance, EnemyInstance } from "../types";
@@ -36,88 +37,105 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   const position = useRef(new THREE.Vector3(0, 0, 0));
   const isJumping = useRef(false);
   const lastPhotoTime = useRef(0);
-
+  
   // Motion State
   const tilt = useRef(0); // -1 to 1 based on gamma
 
-  // Helper for spawning snowballs
-  const spawnSnowball = () => {
-    if (useGameStore.getState().playerForm === "kitten") {
-      Haptics.impact({ style: ImpactStyle.Light });
-      const spawnPos = position.current
-        .clone()
-        .add(new THREE.Vector3(0, 1, -1));
-      const spawnVel = new THREE.Vector3(0, 2, -20);
-      spawnVel.z += velocity.current.z;
-      setSnowballs((prev) => [
-        ...prev,
-        { id: Math.random().toString(), pos: spawnPos, vel: spawnVel },
-      ]);
-    }
-  };
-
-  const jump = () => {
-    const terrainHeight = getHeightAt(
-      position.current.x,
-      position.current.z,
-      "open_slope",
-    );
-    if (
-      playerForm === "kitten" &&
-      !isJumping.current &&
-      position.current.y <= terrainHeight + 0.5
-    ) {
-      Haptics.impact({ style: ImpactStyle.Medium });
-      velocity.current.y = 12;
-      isJumping.current = true;
-    }
-  };
+  // Input state
+  const keys = useRef<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    // Motion Listeners
-    let accelHandler: any;
-
-    const setupMotion = async () => {
-      try {
-        accelHandler = await Motion.addListener("accel", (event) => {
-          // Use X acceleration for tilt (steering)
-          // x is roughly -10 to 10 when tilted 90 degrees
-          // We want to map roughly -3 to 3 to full steer
-          if (event.accelerationIncludingGravity) {
-            const x = event.accelerationIncludingGravity.x || 0;
-            tilt.current = clamp(-x / 3, -1, 1);
-          }
-        });
-      } catch (e) {
-        console.error("Motion not supported", e);
+    // Helper for spawning snowballs
+    const spawnSnowball = () => {
+      if (useGameStore.getState().playerForm === "kitten") {
+        Haptics.impact({ style: ImpactStyle.Light });
+        const spawnPos = position.current
+          .clone()
+          .add(new THREE.Vector3(0, 1, -1));
+        const spawnVel = new THREE.Vector3(0, 2, -20);
+        spawnVel.z += velocity.current.z;
+        setSnowballs((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), pos: spawnPos, vel: spawnVel },
+        ]);
       }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      keys.current[e.code] = true;
+
+      if (e.code === "KeyF") {
+        spawnSnowball();
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      keys.current[e.code] = false;
+    };
+
+    // Touch handling with identifier tracking
+    const touchMap = new Map<number, string>();
+
+    const onTouchStart = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const x = t.clientX;
+
+        if (x > window.innerWidth * 0.3 && x < window.innerWidth * 0.7) {
+          spawnSnowball();
+        } else if (x > window.innerWidth / 2) {
+          keys.current["ArrowRight"] = true;
+          touchMap.set(t.identifier, "ArrowRight");
+        } else {
+          keys.current["ArrowLeft"] = true;
+          touchMap.set(t.identifier, "ArrowLeft");
+        }
+      }
+
+      // Multi-touch for jump (simplified check)
+      if (e.touches.length > 1) keys.current["Space"] = true;
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const key = touchMap.get(t.identifier);
+        if (key) {
+          keys.current[key] = false;
+          touchMap.delete(t.identifier);
+        }
+      }
+      if (e.touches.length < 2) keys.current["Space"] = false;
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("touchstart", onTouchStart);
+    window.addEventListener("touchend", onTouchEnd);
+
+    // Motion
+    let accelHandler: any;
+    const setupMotion = async () => {
+        try {
+            accelHandler = await Motion.addListener('accel', event => {
+                if (event.accelerationIncludingGravity) {
+                    const x = event.accelerationIncludingGravity.x || 0;
+                    tilt.current = clamp(-x / 3, -1, 1);
+                }
+            });
+        } catch (e) {
+            console.error("Motion not supported", e);
+        }
     };
     setupMotion();
 
-    // Touch Listeners
-    const onTouchStart = (e: TouchEvent) => {
-      // Simple logic:
-      // Tap Left side: Jump
-      // Tap Right side: Fire
-      // (Steering is handled by tilt)
-
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        if (t.clientX > window.innerWidth / 2) {
-          spawnSnowball();
-        } else {
-          jump();
-        }
-      }
-    };
-
-    window.addEventListener("touchstart", onTouchStart);
-
     return () => {
-      if (accelHandler) accelHandler.remove();
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      if (accelHandler) accelHandler.remove();
     };
-  }, [jump, spawnSnowball]); // Re-bind if needed, but refs cover most state
+  }, []);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -130,10 +148,13 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
 
     // --- MOVEMENT ---
     const baseSpeed = playerForm === "snowman" ? 10 : 20;
-
+    
     // Apply tilt to horizontal velocity
-    // Smooth out the tilt value
-    const targetX = position.current.x + tilt.current * baseSpeed * dt * 2;
+    let targetX = position.current.x + (tilt.current * baseSpeed * dt * 2);
+
+    // Keyboard overrides for debugging/desktop
+    if (keys.current["ArrowLeft"] || keys.current["KeyA"]) targetX -= baseSpeed * dt;
+    if (keys.current["ArrowRight"] || keys.current["KeyD"]) targetX += baseSpeed * dt;
 
     // Smooth lateral movement
     position.current.x = lerp(position.current.x, targetX, dt * 5);
@@ -148,6 +169,18 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
       position.current.z,
       "open_slope",
     );
+
+    // Jump Logic
+    if (
+      playerForm === "kitten" &&
+      (keys.current["Space"] || keys.current["ArrowUp"]) &&
+      !isJumping.current && 
+      position.current.y <= terrainHeight + 0.5
+    ) {
+        velocity.current.y = 12;
+        isJumping.current = true;
+        AudioSystem.playSFX('jump');
+    }
 
     // Gravity
     if (position.current.y > terrainHeight) {
@@ -177,44 +210,41 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     );
 
     // --- PHOTOGRAPHY ---
-    // Using simple dot product check instead of raycaster for performance on mobile
     if (keys.current["KeyC"] && time - lastPhotoTime.current > 1.0) {
       lastPhotoTime.current = time;
-
+      
       if (useGameStore.getState().inventory.filmRolls > 0) {
-        AudioSystem.playSFX("sfx_camera");
-        Haptics.impact({ style: ImpactStyle.Heavy });
+          AudioSystem.playSFX("camera");
+          Haptics.impact({ style: ImpactStyle.Heavy });
+          
+          let captured = false;
 
-        let captured = false;
+          if (enemiesRef?.current) {
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
 
-        if (enemiesRef?.current) {
-          const camDir = new THREE.Vector3();
-          camera.getWorldDirection(camDir);
+            enemiesRef.current.forEach((enemy) => {
+              const toEnemy = new THREE.Vector3()
+                .subVectors(enemy.position, camera.position)
+                .normalize();
+              const dot = camDir.dot(toEnemy);
+              const dist = camera.position.distanceTo(enemy.position);
 
-          enemiesRef.current.forEach((enemy) => {
-            const toEnemy = new THREE.Vector3()
-              .subVectors(enemy.position, camera.position)
-              .normalize();
-            const dot = camDir.dot(toEnemy);
-            const dist = camera.position.distanceTo(enemy.position);
+              if (dot > 0.9 && dist < 50) {
+                addPhoto("enemy");
+                addScore(500);
+                enemy.hit(); 
+                captured = true;
+              }
+            });
+          }
 
-            if (dot > 0.9 && dist < 50) {
-              addPhoto("enemy");
-              addScore(500);
-              enemy.hit();
-              captured = true;
-            }
-          });
-        }
-
-        if (!captured) {
-          addPhoto("glitch");
-        }
-      } else {
-        // Out of film feedback?
+          if (!captured) {
+            addPhoto("glitch"); 
+          }
       }
     }
-
+    
     // --- COMBAT / COLLISION ---
     if (enemiesRef?.current) {
       enemiesRef.current.forEach((enemy) => {
@@ -222,17 +252,21 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
         if (dist < 1.5) {
           if (playerForm === "snowman") {
             Haptics.impact({ style: ImpactStyle.Heavy });
+            AudioSystem.playSFX('impact');
             enemy.hit();
             addScore(200);
           } else if (isJumping.current) {
             Haptics.impact({ style: ImpactStyle.Medium });
+            AudioSystem.playSFX('impact');
             enemy.hit();
             addScore(100);
           } else {
             Haptics.vibrate({ duration: 200 });
+            AudioSystem.playSFX('impact');
             decreaseWarmth(15);
             enemy.hit();
-            if (enemy.type === "snowman" && Math.random() > 0.5) {
+            // Deterministic curse chance
+            if (enemy.type === "snowman" && GameRNG.chance(0.5)) {
               setPlayerForm("snowman");
             }
           }
@@ -247,10 +281,11 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
         if (dist < 2.0) {
           if (item.type === "cocoa") {
             Haptics.notification({ type: "success" });
+            AudioSystem.playSFX('cocoa');
             increaseWarmth(30);
             if (playerForm === "snowman") {
               setPlayerForm("kitten");
-              addScore(500);
+              addScore(500); 
             }
           }
           item.collect();
@@ -262,7 +297,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     // Rotation
     mesh.current.rotation.y = lerp(
       mesh.current.rotation.y,
-      tilt.current * -0.5, // Tilt mesh based on accelerometer
+      tilt.current * -0.5,
       dt * 5,
     );
     if (playerForm === "snowman") {

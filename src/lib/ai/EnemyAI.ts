@@ -1,5 +1,6 @@
 import * as YUKA from "yuka";
 import { GAME_CONFIG } from "../../config/gameConfig";
+import { GameRNG } from "../rng";
 
 export class EnemyVehicle extends YUKA.Vehicle {
   public enemyType: keyof typeof GAME_CONFIG.enemies;
@@ -30,7 +31,7 @@ export class IdleState extends YUKA.State<EnemyVehicle> {
         vehicle.stateMachine.changeTo("CHASE");
       } else if (
         vehicle.enemyType === "glitch_imp" &&
-        Math.random() > 0.99
+        GameRNG.chance(0.01)
       ) {
         vehicle.stateMachine.changeTo("PATROL");
       }
@@ -94,7 +95,7 @@ export class PatrolState extends YUKA.State<EnemyVehicle> {
         }
     }
 
-    if (this.timer > 300 || Math.random() > 0.995) {
+    if (this.timer > 300 || GameRNG.chance(0.005)) {
       vehicle.stateMachine.changeTo("IDLE");
     }
   }
