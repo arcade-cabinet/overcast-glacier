@@ -1,10 +1,12 @@
 ---
 import "../assets/styles.css";
 
+// biome-ignore lint/correctness/noUnusedVariables: Used in Astro props
 interface Props {
   title: string;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Used in template
 const { title } = Astro.props;
 ---
 

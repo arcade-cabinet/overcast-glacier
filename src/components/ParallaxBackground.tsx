@@ -24,6 +24,7 @@ export const ParallaxBackground = () => {
       {/* Distant Mountains */}
       <group ref={mountains} position={[0, -10, -100]}>
         {Array.from({ length: 5 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: Static content
           <mesh key={i} position={[(i - 2) * 50, 0, 0]}>
             <coneGeometry args={[30, 80, 4]} />
             <meshStandardMaterial color="#1E3A8A" roughness={0.9} />

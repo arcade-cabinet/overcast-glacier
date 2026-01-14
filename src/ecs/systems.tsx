@@ -1,12 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
 import { getBiomeAt, getHeightAt } from "../lib/procedural";
 import { useGameStore } from "../stores/useGameStore";
 import { world } from "./world";
 
 // --- PHYSICS SYSTEM ---
 export const PhysicsSystem = () => {
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     const dt = Math.min(delta, 0.1);
 
     // Query entities with position and velocity
@@ -64,7 +63,7 @@ export const CollisionSystem = () => {
     for (const enemy of enemies) {
       if (
         player.position.distanceTo(enemy.position) <
-        player.radius! + enemy.radius!
+        (player.radius ?? 0) + (enemy.radius ?? 0)
       ) {
         // Collision!
         if (playerForm === "snowman") {
@@ -89,7 +88,7 @@ export const CollisionSystem = () => {
     for (const item of collectibles) {
       if (
         player.position.distanceTo(item.position) <
-        player.radius! + item.radius!
+        (player.radius ?? 0) + (item.radius ?? 0)
       ) {
         if (item.collectibleType === "cocoa") {
           increaseWarmth(30);
@@ -107,9 +106,18 @@ export const CollisionSystem = () => {
     const projectiles = world
       .with("tag", "position", "radius")
       .where((e) => e.tag === "projectile");
+
+    // Re-query enemies to ensure we have up-to-date list (in case some were removed above)
+    const activeEnemies = world
+      .with("tag", "position", "radius")
+      .where((e) => e.tag === "enemy");
+
     for (const p of projectiles) {
-      for (const e of enemies) {
-        if (p.position.distanceTo(e.position) < p.radius! + e.radius!) {
+      for (const e of activeEnemies) {
+        if (
+          p.position.distanceTo(e.position) <
+          (p.radius ?? 0) + (e.radius ?? 0)
+        ) {
           world.remove(e);
           world.remove(p);
           addScore(100);

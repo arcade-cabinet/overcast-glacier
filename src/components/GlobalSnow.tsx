@@ -1,9 +1,17 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type * as THREE from "three";
 
 export const GlobalSnow = () => {
   const points = useRef<THREE.Points>(null);
+
+  const positions = useMemo(
+    () =>
+      new Float32Array(
+        Array.from({ length: 15000 }, () => (Math.random() - 0.5) * 100),
+      ),
+    [],
+  );
 
   useFrame(() => {
     if (points.current) {
@@ -18,11 +26,7 @@ export const GlobalSnow = () => {
         <bufferAttribute
           attach="attributes-position"
           count={5000}
-          array={
-            new Float32Array(
-              Array.from({ length: 15000 }, () => (Math.random() - 0.5) * 100),
-            )
-          }
+          array={positions}
           itemSize={3}
         />
       </bufferGeometry>

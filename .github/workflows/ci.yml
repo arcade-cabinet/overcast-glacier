@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and Test
+    name: Lint and Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,6 +43,7 @@ jobs:
           NODE_ENV: production
 
       - name: Upload build artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: dist

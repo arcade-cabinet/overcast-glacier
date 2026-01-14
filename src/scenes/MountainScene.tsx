@@ -66,7 +66,7 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
     const biome = getBiomeAt(centerZ);
 
     const entities = [];
-    const enemyCount = Math.floor(randomRange(1, 4));
+    const enemyCount = Math.floor(randomRange(1, 5));
 
     for (let i = 0; i < enemyCount; i++) {
       const ex = randomRange(-10, 10);
@@ -80,8 +80,8 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
         type = r > 0.3 ? "polar_bear" : "snowman";
       else if (biome === "summit") type = r > 0.5 ? "glitch_imp" : "polar_bear";
       else {
-        if (r > 0.8) type = "polar_bear";
-        else if (r > 0.9) type = "glitch_imp";
+        if (r > 0.9) type = "glitch_imp";
+        else if (r > 0.8) type = "polar_bear";
         else type = "snowman";
       }
 

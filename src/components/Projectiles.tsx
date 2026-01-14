@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useRef, useState } from "react";
 import type * as THREE from "three";
 import type { EnemyInstance } from "../types";
 
@@ -19,10 +19,10 @@ export const Snowball = ({
   const mesh = useRef<THREE.Mesh>(null);
   const pos = useRef(position.clone());
   const vel = useRef(velocity.clone());
-  const active = useRef(true);
+  const [active, setActive] = useState(true);
 
-  useFrame((state, delta) => {
-    if (!active.current || !mesh.current) return;
+  useFrame((_state, delta) => {
+    if (!active || !mesh.current) return;
 
     // Physics
     vel.current.y -= 9.8 * delta; // Gravity
@@ -33,7 +33,7 @@ export const Snowball = ({
     // Collision with ground (approximate)
     if (pos.current.y < -10) {
       // arbitrary floor
-      active.current = false;
+      setActive(false);
       onHit();
     }
 
@@ -42,7 +42,7 @@ export const Snowball = ({
       for (const enemy of enemiesRef.current) {
         if (pos.current.distanceTo(enemy.position) < 1.0) {
           enemy.hit();
-          active.current = false;
+          setActive(false);
           onHit();
           break;
         }
@@ -50,7 +50,7 @@ export const Snowball = ({
     }
   });
 
-  if (!active.current) return null;
+  if (!active) return null;
 
   return (
     <mesh ref={mesh} position={position}>

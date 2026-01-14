@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0F172A;
-  --color-accent-ice: #7DD3FC;
-  --color-snow-white: #F8FAFC;
-  --color-glacier-blue: #1E40AF;
-  --color-frost-highlight: #60A5FA;
-  --color-warning-red: #EF4444;
-  --color-hot-cocoa: #8B4513;
-  --color-matrix-green: #10B981;
+  --color-primary: #0f172a;
+  --color-accent-ice: #7dd3fc;
+  --color-snow-white: #f8fafc;
+  --color-glacier-blue: #1e40af;
+  --color-frost-highlight: #60a5fa;
+  --color-warning-red: #ef4444;
+  --color-hot-cocoa: #8b4513;
+  --color-matrix-green: #10b981;
 
   --font-heading: "Orbitron", sans-serif;
   --font-body: "VT323", monospace;
@@ -17,17 +17,17 @@
 
 /* Global Styles */
 body {
-    background-color: var(--color-primary);
-    color: var(--color-snow-white);
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    height: 100vh;
-    width: 100vw;
-    overscroll-behavior-y: none;
-    font-family: var(--font-heading);
+  background-color: var(--color-primary);
+  color: var(--color-snow-white);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  height: 100vh;
+  width: 100vw;
+  overscroll-behavior-y: none;
+  font-family: var(--font-heading);
 }
 
 .drop-shadow-glow {
-    filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.8));
+  filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.8));
 }

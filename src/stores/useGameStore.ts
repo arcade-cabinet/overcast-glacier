@@ -73,7 +73,7 @@ export const useGameStore = create<GameStore>((set) => ({
       if (state.inventory.filmRolls <= 0) return {};
 
       const newPhoto: Photo = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 11),
         timestamp: Date.now(),
         type,
         status: "developing",

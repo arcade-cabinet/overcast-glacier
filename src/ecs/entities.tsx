@@ -3,8 +3,10 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { HotCocoa } from "../components/Collectibles";
 import { GlitchImp, PolarBear, Snowman } from "../components/Enemies";
+import { getBiomeAt, getHeightAt } from "../lib/procedural";
 import { clamp, lerp } from "../lib/utils"; // Re-import utils
 import { useGameStore } from "../stores/useGameStore";
+import type { EnemyInstance } from "../types";
 import { ECS } from "./world";
 
 // --- PLAYER ---
@@ -35,8 +37,12 @@ const PlayerRender = () => {
   const keys = useRef<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => (keys.current[e.code] = true);
-    const onKeyUp = (e: KeyboardEvent) => (keys.current[e.code] = false);
+    const onKeyDown = (e: KeyboardEvent) => {
+      keys.current[e.code] = true;
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      keys.current[e.code] = false;
+    };
     const onTouchStart = (e: TouchEvent) => {
       const x = e.touches[0].clientX;
       if (x > window.innerWidth / 2) keys.current["ArrowRight"] = true;
@@ -82,8 +88,15 @@ const PlayerRender = () => {
       form === "kitten" &&
       (keys.current["Space"] || keys.current["ArrowUp"])
     ) {
-      // Simple ground check via velocity (if near 0 y velocity and not falling fast)
-      if (Math.abs(entity.velocity.y) < 0.1) {
+      // Ground check using procedural height
+      const biome = getBiomeAt(entity.position.z);
+      const groundHeight = getHeightAt(
+        entity.position.x,
+        entity.position.z,
+        biome,
+      );
+
+      if (entity.position.y <= groundHeight + 0.5) {
         entity.velocity.y = 12;
       }
     }
@@ -143,19 +156,24 @@ const PlayerRender = () => {
 };
 
 // ... EnemyRenderer and CollectibleRenderer remain same ...
-export const EnemyRenderer = () => {
+export const EnemyRenderer = ({
+  onRegister,
+}: {
+  onRegister?: (instance: EnemyInstance) => () => void;
+}) => {
+  const register = onRegister || (() => () => {});
   return (
     <ECS.Entities in={ECS.world.with("tag", "enemyType")}>
       {(entity) => (
         <group position={entity.position}>
           {entity.enemyType === "snowman" && (
-            <Snowman position={[0, 0, 0]} onRegister={() => () => {}} />
+            <Snowman position={[0, 0, 0]} onRegister={register} />
           )}
           {entity.enemyType === "polar_bear" && (
-            <PolarBear position={[0, 0, 0]} onRegister={() => () => {}} />
+            <PolarBear position={[0, 0, 0]} onRegister={register} />
           )}
           {entity.enemyType === "glitch_imp" && (
-            <GlitchImp position={[0, 0, 0]} onRegister={() => () => {}} />
+            <GlitchImp position={[0, 0, 0]} onRegister={register} />
           )}
         </group>
       )}

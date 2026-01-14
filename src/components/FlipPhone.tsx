@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
-  const [messages, setMessages] = useState([
+  const [messages, _setMessages] = useState([
     { sender: "Peng", text: "Wake up, Kicks. The mountain has you." },
     {
       sender: "Peng",
@@ -21,6 +21,7 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
           </div>
           <div className="flex-1 overflow-y-auto space-y-2 font-body text-green-400 text-sm">
             {messages.map((msg, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: No unique ID for static messages
               <div key={i} className="bg-green-900/20 p-1 rounded">
                 <span className="font-bold text-green-300">{msg.sender}:</span>{" "}
                 {msg.text}
@@ -35,6 +36,7 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
       <div className="h-1/3 bg-gray-900 p-4 grid grid-cols-3 gap-2">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"].map((k) => (
           <button
+            type="button"
             key={k}
             className="bg-gray-800 rounded text-gray-400 text-xs font-heading hover:bg-gray-700 active:bg-gray-600"
           >
@@ -42,6 +44,7 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
           </button>
         ))}
         <button
+          type="button"
           onClick={onClose}
           className="col-span-3 mt-1 bg-red-900/50 text-red-400 text-xs py-1 rounded border border-red-500/30 uppercase tracking-widest hover:bg-red-900"
         >

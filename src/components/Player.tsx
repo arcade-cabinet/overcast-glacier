@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { getHeightAt } from "../lib/procedural";
 import { clamp, lerp } from "../lib/utils";
-import { PlayerForm, useGameStore } from "../stores/useGameStore";
+import { useGameStore } from "../stores/useGameStore";
 import type { CollectibleInstance, EnemyInstance } from "../types";
 import { Snowball } from "./Projectiles";
 
@@ -38,51 +38,65 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   const keys = useRef<{ [key: string]: boolean }>({});
 
   useEffect(() => {
+    // Helper for spawning snowballs
+    const spawnSnowball = () => {
+      if (useGameStore.getState().playerForm === "kitten") {
+        const spawnPos = position.current
+          .clone()
+          .add(new THREE.Vector3(0, 1, -1));
+        const spawnVel = new THREE.Vector3(0, 2, -20);
+        spawnVel.z += velocity.current.z;
+        setSnowballs((prev) => [
+          ...prev,
+          { id: Math.random().toString(), pos: spawnPos, vel: spawnVel },
+        ]);
+      }
+    };
+
     const onKeyDown = (e: KeyboardEvent) => {
       keys.current[e.code] = true;
 
       if (e.code === "KeyF") {
-        if (useGameStore.getState().playerForm === "kitten") {
-          const spawnPos = position.current
-            .clone()
-            .add(new THREE.Vector3(0, 1, -1));
-          const spawnVel = new THREE.Vector3(0, 2, -20);
-          spawnVel.z += velocity.current.z;
-          setSnowballs((prev) => [
-            ...prev,
-            { id: Math.random().toString(), pos: spawnPos, vel: spawnVel },
-          ]);
-        }
+        spawnSnowball();
       }
     };
-    const onKeyUp = (e: KeyboardEvent) => (keys.current[e.code] = false);
+    const onKeyUp = (e: KeyboardEvent) => {
+      keys.current[e.code] = false;
+    };
 
-    // Touch handling
+    // Touch handling with identifier tracking
+    const touchMap = new Map<number, string>();
+
     const onTouchStart = (e: TouchEvent) => {
-      const x = e.touches[0].clientX;
-      // Center tap for fire?
-      if (x > window.innerWidth * 0.3 && x < window.innerWidth * 0.7) {
-        if (useGameStore.getState().playerForm === "kitten") {
-          const spawnPos = position.current
-            .clone()
-            .add(new THREE.Vector3(0, 1, -1));
-          const spawnVel = new THREE.Vector3(0, 2, -20);
-          spawnVel.z += velocity.current.z;
-          setSnowballs((prev) => [
-            ...prev,
-            { id: Math.random().toString(), pos: spawnPos, vel: spawnVel },
-          ]);
-        }
-      } else if (x > window.innerWidth / 2) keys.current["ArrowRight"] = true;
-      else keys.current["ArrowLeft"] = true;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const x = t.clientX;
 
-      // Multi-touch for jump
+        if (x > window.innerWidth * 0.3 && x < window.innerWidth * 0.7) {
+          spawnSnowball();
+        } else if (x > window.innerWidth / 2) {
+          keys.current["ArrowRight"] = true;
+          touchMap.set(t.identifier, "ArrowRight");
+        } else {
+          keys.current["ArrowLeft"] = true;
+          touchMap.set(t.identifier, "ArrowLeft");
+        }
+      }
+
+      // Multi-touch for jump (simplified check)
       if (e.touches.length > 1) keys.current["Space"] = true;
     };
+
     const onTouchEnd = (e: TouchEvent) => {
-      keys.current["ArrowRight"] = false;
-      keys.current["ArrowLeft"] = false;
-      keys.current["Space"] = false;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const key = touchMap.get(t.identifier);
+        if (key) {
+          keys.current[key] = false;
+          touchMap.delete(t.identifier);
+        }
+      }
+      if (e.touches.length < 2) keys.current["Space"] = false;
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -180,7 +194,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
       // Check for enemies in view
       let captured = false;
 
-      if (enemiesRef && enemiesRef.current) {
+      if (enemiesRef?.current) {
         const camDir = new THREE.Vector3();
         camera.getWorldDirection(camDir);
 
@@ -208,7 +222,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     }
 
     // --- COMBAT / COLLISION ---
-    if (enemiesRef && enemiesRef.current) {
+    if (enemiesRef?.current) {
       enemiesRef.current.forEach((enemy) => {
         const dist = position.current.distanceTo(enemy.position);
         if (dist < 1.5) {
@@ -234,7 +248,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     }
 
     // --- COLLECTIBLES ---
-    if (collectiblesRef && collectiblesRef.current) {
+    if (collectiblesRef?.current) {
       collectiblesRef.current.forEach((item) => {
         const dist = position.current.distanceTo(item.position);
         if (dist < 2.0) {
@@ -273,17 +287,18 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   return (
     <group ref={mesh}>
       {/* SNOWBALLS */}
-      {snowballs.map((s) => (
-        <Snowball
-          key={s.id}
-          position={s.pos}
-          velocity={s.vel}
-          enemiesRef={enemiesRef as React.MutableRefObject<EnemyInstance[]>}
-          onHit={() => {
-            setSnowballs((prev) => prev.filter((p) => p.id !== s.id));
-          }}
-        />
-      ))}
+      {enemiesRef &&
+        snowballs.map((s) => (
+          <Snowball
+            key={s.id}
+            position={s.pos}
+            velocity={s.vel}
+            enemiesRef={enemiesRef as React.MutableRefObject<EnemyInstance[]>}
+            onHit={() => {
+              setSnowballs((prev) => prev.filter((p) => p.id !== s.id));
+            }}
+          />
+        ))}
 
       {playerForm === "kitten" ? (
         <group>

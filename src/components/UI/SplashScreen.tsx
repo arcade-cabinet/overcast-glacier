@@ -6,11 +6,15 @@ export const SplashScreen = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let innerTimer: NodeJS.Timeout;
+    const outerTimer = setTimeout(() => {
       setVisible(false);
-      setTimeout(() => setGameState("menu"), 1000);
+      innerTimer = setTimeout(() => setGameState("menu"), 1000);
     }, 3000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(outerTimer);
+      clearTimeout(innerTimer);
+    };
   }, [setGameState]);
 
   if (!visible) return null;

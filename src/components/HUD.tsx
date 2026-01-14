@@ -42,6 +42,7 @@ export const HUD = () => {
       {/* Flip Phone Button */}
       <div className="absolute bottom-6 right-6 pointer-events-auto">
         <button
+          type="button"
           onClick={() => setPhoneOpen(!phoneOpen)}
           className="w-16 h-16 bg-black border-2 border-accent-ice rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_15px_rgba(125,211,252,0.5)]"
         >

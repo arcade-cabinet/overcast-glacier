@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { type EnemyInstance, EnemyType } from "../types";
+import type { EnemyInstance } from "../types";
 
 interface EnemyProps {
   position: [number, number, number];
@@ -16,7 +16,7 @@ export const Snowman = ({ position, onRegister }: EnemyProps) => {
   useEffect(() => {
     if (!active) return;
     const instance: EnemyInstance = {
-      id: Math.random().toString(),
+      id: crypto.randomUUID(),
       position: new THREE.Vector3(...position),
       type: "snowman",
       hit: () => {
@@ -64,7 +64,7 @@ export const PolarBear = ({ position, onRegister }: EnemyProps) => {
   useEffect(() => {
     if (!active) return;
     const instance: EnemyInstance = {
-      id: Math.random().toString(),
+      id: crypto.randomUUID(),
       position: new THREE.Vector3(...position),
       type: "polar_bear",
       hit: () => {
@@ -125,7 +125,7 @@ export const GlitchImp = ({ position, onRegister }: EnemyProps) => {
   useEffect(() => {
     if (!active) return;
     const instance: EnemyInstance = {
-      id: Math.random().toString(),
+      id: crypto.randomUUID(),
       position: new THREE.Vector3(...position),
       type: "glitch_imp",
       hit: () => {

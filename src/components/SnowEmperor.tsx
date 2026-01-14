@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type * as THREE from "three";
 import { useGameStore } from "../stores/useGameStore";
 
@@ -9,9 +9,9 @@ export const SnowEmperor = ({
   position: [number, number, number];
 }) => {
   const group = useRef<THREE.Group>(null);
-  const [phase, setPhase] = useState(1);
-  const [health, setHealth] = useState(100);
-  const addScore = useGameStore((state) => state.addScore);
+  const [phase, _setPhase] = useState(1);
+  const [health, _setHealth] = useState(100);
+  const _addScore = useGameStore((state) => state.addScore);
 
   // Floating animation
   useFrame((state) => {
@@ -73,6 +73,7 @@ export const SnowEmperor = ({
       {/* Floating Shards (Attack telegraphs) */}
       {Array.from({ length: 8 }).map((_, i) => (
         <mesh
+          // biome-ignore lint/suspicious/noArrayIndexKey: Static content
           key={i}
           position={[
             Math.cos(i) * (6 + phase),

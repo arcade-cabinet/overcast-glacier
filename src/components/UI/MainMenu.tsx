@@ -17,6 +17,7 @@ export const MainMenu = () => {
 
       <div className="flex flex-col gap-4 w-64">
         <button
+          type="button"
           onClick={() => {
             console.log("Entering simulation...");
             setGameState("playing");
@@ -26,7 +27,10 @@ export const MainMenu = () => {
           ENTER SIMULATION
         </button>
 
-        <button className="bg-gray-800 hover:bg-gray-700 text-white font-body py-2 rounded-lg border border-gray-600">
+        <button
+          type="button"
+          className="bg-gray-800 hover:bg-gray-700 text-white font-body py-2 rounded-lg border border-gray-600"
+        >
           SETTINGS
         </button>
       </div>
