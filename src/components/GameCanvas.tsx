@@ -28,9 +28,9 @@ export const GameCanvas = () => {
     window.addEventListener("click", startAudio);
     window.addEventListener("touchstart", startAudio);
     return () => {
-        window.removeEventListener("click", startAudio);
-        window.removeEventListener("touchstart", startAudio);
-    }
+      window.removeEventListener("click", startAudio);
+      window.removeEventListener("touchstart", startAudio);
+    };
   }, []);
 
   return (
@@ -39,7 +39,12 @@ export const GameCanvas = () => {
         camera={{ position: [0, 5, 10], fov: 60 }}
         shadows
         dpr={[1, 2]}
-        gl={{ antialias: false, stencil: false, depth: true, preserveDrawingBuffer: true }}
+        gl={{
+          antialias: false,
+          stencil: false,
+          depth: true,
+          preserveDrawingBuffer: true,
+        }}
       >
         <Resize />
         <Suspense fallback={null}>

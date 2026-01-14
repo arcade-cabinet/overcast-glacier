@@ -4,7 +4,7 @@ import * as THREE from "three";
 import type { EnemyInstance } from "../types";
 
 interface EnemyProps {
-  entity: any; // ECS Entity reference
+  entity: { position: THREE.Vector3; velocity: THREE.Vector3 }; // ECS Entity reference
   onRegister: (instance: EnemyInstance) => () => void;
 }
 

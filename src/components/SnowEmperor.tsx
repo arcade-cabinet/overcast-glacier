@@ -1,7 +1,8 @@
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
-import type * as THREE from "three";
+import { useRef, useState, useMemo } from "react";
+import * as THREE from "three";
 import { useGameStore } from "../stores/useGameStore";
+import { GameRNG } from "../lib/rng";
 
 export const SnowEmperor = ({
   position,
@@ -45,43 +46,55 @@ export const SnowEmperor = ({
     }
 
     // Phase 2+ Agitated shake
-    if (bossPhase >= 2) {
-      group.current.position.x =
-        position[0] + Math.sin(time * (bossPhase * 5)) * 0.2 * bossPhase;
+    if (bossPhase === 2) {
+      group.current.position.x = position[0] + Math.sin(time * 10) * 0.5;
+    } else if (bossPhase === 3) {
+      // Glitchy Teleport (Visual only for now)
+      if (GameRNG.chance(0.05)) {
+        group.current.position.x = (GameRNG.next() - 0.5) * 10;
+      }
     }
   });
 
   return (
     <group ref={group} position={position}>
-      {/* Boss Core */}
+      {/* Health Bar (World Space) */}
+      <mesh position={[0, 12, 0]}>
+        <planeGeometry args={[10, 1]} />
+        <meshBasicMaterial color="black" />
+      </mesh>
+      <mesh position={[-5 + bossHealth / 20, 12, 0.1]}>
+        <planeGeometry args={[bossHealth / 10, 0.8]} />
+        <meshBasicMaterial color={bossHealth > 50 ? "#10B981" : "#EF4444"} />
+      </mesh>
+
+      {/* Throne Base */}
+      <mesh position={[0, 0, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[5, 6, 2, 8]} />
+        <meshStandardMaterial color="#1E40AF" roughness={0.2} metalness={0.8} />
+      </mesh>
+
+      {/* The Emperor Body (Glitchy Ice) */}
       <mesh ref={coreMesh} position={[0, 5, 0]} castShadow>
-        <dodecahedronGeometry args={[4, 0]} />
+        <dodecahedronGeometry args={[3 + bossPhase * 0.5, 0]} />
         <meshStandardMaterial
           color={bossPhase === 4 ? "#EF4444" : "#7DD3FC"}
           emissive={bossPhase >= 3 ? "#EF4444" : "#7DD3FC"}
           emissiveIntensity={bossPhase * 0.5}
           wireframe={bossPhase >= 3}
-          transparent
-          opacity={0.9}
         />
       </mesh>
 
-      {/* Internal "Glitch" Core */}
+      {/* Core */}
       <mesh position={[0, 5, 0]}>
-        <octahedronGeometry args={[1.5, 0]} />
+        <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color="white" />
       </mesh>
 
-      {/* Floating Shards (Defensive/Attack Orbit) */}
+      {/* Floating Shards (Attack telegraphs) */}
       {shards.map((_, i) => (
         <Shard key={i} index={i} total={shardCount} phase={bossPhase} />
       ))}
-
-      {/* Throne / Base */}
-      <mesh position={[0, -2, 0]} receiveShadow>
-        <cylinderGeometry args={[10, 12, 4, 8]} />
-        <meshStandardMaterial color="#1E3A8A" roughness={0.1} metalness={0.5} />
-      </mesh>
     </group>
   );
 };

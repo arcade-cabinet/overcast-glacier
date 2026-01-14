@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import type * as THREE from "three";
+import { GameRNG } from "../lib/rng";
 
 export const GlobalSnow = () => {
   const points = useRef<THREE.Points>(null);
@@ -8,7 +9,7 @@ export const GlobalSnow = () => {
   const positions = useMemo(
     () =>
       new Float32Array(
-        Array.from({ length: 15000 }, () => (Math.random() - 0.5) * 100),
+        Array.from({ length: 15000 }, () => (GameRNG.next() - 0.5) * 100),
       ),
     [],
   );

@@ -1,3 +1,4 @@
+import { GameRNG } from "../rng";
 import { AudioContextManager, createNoiseBuffer } from "./core";
 
 export class AtmosphereSynth {
@@ -67,7 +68,7 @@ export class AtmosphereSynth {
     const loop = () => {
       if (!this.isPlaying) return;
       
-      const delay = Math.random() * 5000 + 2000; // Random crackle every 2-7s
+      const delay = GameRNG.range(2000, 7000); // Random crackle every 2-7s
       setTimeout(() => {
         this.triggerCrackle();
         loop();
@@ -83,7 +84,7 @@ export class AtmosphereSynth {
     const filter = this.ctx.createBiquadFilter();
 
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(Math.random() * 1000 + 2000, this.ctx.currentTime);
+    osc.frequency.setValueAtTime(GameRNG.range(2000, 3000), this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.1);
 
     filter.type = 'highpass';

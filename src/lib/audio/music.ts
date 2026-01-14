@@ -1,3 +1,4 @@
+import { GameRNG } from "../rng";
 import { AudioContextManager } from "./core";
 
 // Minor Pentatonic Scale Frequencies (roughly A minor)
@@ -67,7 +68,7 @@ export class MusicSynth {
     while (this.nextNoteTime < this.ctx.currentTime + 0.5) {
       this.playRandomNote(this.nextNoteTime);
       // Random interval between notes
-      this.nextNoteTime += Math.random() * 2 + 1; 
+      this.nextNoteTime += GameRNG.range(1, 3); 
     }
 
     setTimeout(() => this.scheduleNotes(), 200);
@@ -78,12 +79,12 @@ export class MusicSynth {
     const gain = this.ctx.createGain();
     
     // Choose random note from scale
-    const freq = SCALE[Math.floor(Math.random() * SCALE.length)];
+    const freq = SCALE[Math.floor(GameRNG.next() * SCALE.length)];
     
     // Occasional octave jump for "glitch" feel
-    const octave = Math.random() > 0.8 ? 2 : 1;
+    const octave = GameRNG.chance(0.2) ? 2 : 1;
     
-    osc.type = Math.random() > 0.5 ? 'sine' : 'triangle';
+    osc.type = GameRNG.chance(0.5) ? 'sine' : 'triangle';
     osc.frequency.setValueAtTime(freq * octave, time);
 
     // Envelope
