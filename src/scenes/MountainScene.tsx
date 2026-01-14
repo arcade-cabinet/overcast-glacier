@@ -57,17 +57,17 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
       positions: new Float32Array(positions),
       indices: indices,
       biomeColor: getBiomeColor(biome),
-      biome
+      biome,
     };
   }, [zOffset]);
 
   // SPAWN ENTITIES
   useEffect(() => {
     // Re-seed RNG based on chunk position to ensure deterministic spawning per chunk
-    // This allows re-visiting chunks (if we did that) to have same enemies, 
+    // This allows re-visiting chunks (if we did that) to have same enemies,
     // and ensures consistency across renders if useEffect re-runs
     const chunkSeed = Math.floor(Math.abs(zOffset));
-    const chunkRNG = new (GameRNG.constructor as any)(chunkSeed); 
+    const chunkRNG = new (GameRNG.constructor as any)(chunkSeed);
 
     const entities: any[] = [];
     const enemyCount = biome === "summit" ? 0 : chunkRNG.rangeInt(2, 6);
@@ -78,8 +78,9 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
       const ey = getHeightAt(ex, ez, biome);
 
       let type: EnemyType = "snowman";
-      
-      if (biome === "ice_cave") type = chunkRNG.chance(0.4) ? "glitch_imp" : "snowman";
+
+      if (biome === "ice_cave")
+        type = chunkRNG.chance(0.4) ? "glitch_imp" : "snowman";
       else if (biome === "frozen_rink") type = "snowman";
       else {
         if (chunkRNG.chance(0.1)) type = "glitch_imp";
@@ -134,18 +135,18 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
             itemSize={1}
           />
         </bufferGeometry>
-        <meshStandardMaterial 
-            color={biomeColor} 
-            roughness={0.8} 
-            metalness={0.1}
-            flatShading 
+        <meshStandardMaterial
+          color={biomeColor}
+          roughness={0.8}
+          metalness={0.1}
+          flatShading
         />
       </mesh>
-      
+
       {/* Visual Glitch Shards for Ice Cave */}
       {biome === "ice_cave" && (
-        <group position={[0, 0, -zOffset - CHUNK_SIZE/2]}>
-             {/* Add some procedural icicles here if needed */}
+        <group position={[0, 0, -zOffset - CHUNK_SIZE / 2]}>
+          {/* Add some procedural icicles here if needed */}
         </group>
       )}
     </group>

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import * as THREE from "three";
 
 export const Resize = () => {
-  const { camera, size, gl } = useThree();
+  const { camera, gl } = useThree();
 
   useEffect(() => {
     const handleResize = () => {

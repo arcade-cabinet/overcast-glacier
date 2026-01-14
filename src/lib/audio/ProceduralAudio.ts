@@ -5,7 +5,7 @@ import { SFXSynth } from "./sfx";
 
 export class ProceduralAudio {
   private static instance: ProceduralAudio;
-  
+
   public atmosphere: AtmosphereSynth;
   public music: MusicSynth;
   public sfx: SFXSynth;
@@ -32,13 +32,21 @@ export class ProceduralAudio {
     this.initialized = true;
   }
 
-  public playSFX(type: 'jump' | 'impact' | 'camera' | 'cocoa') {
+  public playSFX(type: "jump" | "impact" | "camera" | "cocoa") {
     if (!this.initialized) return; // Or queue?
     switch (type) {
-      case 'jump': this.sfx.playJump(); break;
-      case 'impact': this.sfx.playImpact(); break;
-      case 'camera': this.sfx.playCamera(); break;
-      case 'cocoa': this.sfx.playCocoa(); break;
+      case "jump":
+        this.sfx.playJump();
+        break;
+      case "impact":
+        this.sfx.playImpact();
+        break;
+      case "camera":
+        this.sfx.playCamera();
+        break;
+      case "cocoa":
+        this.sfx.playCocoa();
+        break;
     }
   }
 }
@@ -50,12 +58,12 @@ export const AudioSystem = {
   },
   playSFX: (key: string) => {
     // Map old keys to new types
-    if (key === 'sfx_camera') ProceduralAudio.get().playSFX('camera');
-    if (key === 'sfx_jump') ProceduralAudio.get().playSFX('jump');
-    if (key === 'sfx_impact') ProceduralAudio.get().playSFX('impact');
-    if (key === 'sfx_cocoa') ProceduralAudio.get().playSFX('cocoa');
+    if (key === "sfx_camera") ProceduralAudio.get().playSFX("camera");
+    if (key === "sfx_jump") ProceduralAudio.get().playSFX("jump");
+    if (key === "sfx_impact") ProceduralAudio.get().playSFX("impact");
+    if (key === "sfx_cocoa") ProceduralAudio.get().playSFX("cocoa");
   },
   init: () => {
     ProceduralAudio.get().init();
-  }
+  },
 };

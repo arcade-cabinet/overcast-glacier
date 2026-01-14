@@ -24,7 +24,7 @@ export class RNG {
   rangeInt(min: number, max: number): number {
     return Math.floor(this.range(min, max + 1));
   }
-  
+
   // Boolean chance
   chance(probability: number): boolean {
     return this.next() < probability;
@@ -33,4 +33,4 @@ export class RNG {
 
 // Global instance for general game logic
 // We can instantiate separate ones for Audio/Terrain if we want isolated streams
-export const GameRNG = new RNG(8888); 
+export const GameRNG = new RNG(8888);

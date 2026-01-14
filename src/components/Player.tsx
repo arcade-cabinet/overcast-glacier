@@ -37,7 +37,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
   const position = useRef(new THREE.Vector3(0, 0, 0));
   const isJumping = useRef(false);
   const lastPhotoTime = useRef(0);
-  
+
   // Motion State
   const tilt = useRef(0); // -1 to 1 based on gamma
 
@@ -115,16 +115,16 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     // Motion
     let accelHandler: any;
     const setupMotion = async () => {
-        try {
-            accelHandler = await Motion.addListener('accel', event => {
-                if (event.accelerationIncludingGravity) {
-                    const x = event.accelerationIncludingGravity.x || 0;
-                    tilt.current = clamp(-x / 3, -1, 1);
-                }
-            });
-        } catch (e) {
-            console.error("Motion not supported", e);
-        }
+      try {
+        accelHandler = await Motion.addListener("accel", (event) => {
+          if (event.accelerationIncludingGravity) {
+            const x = event.accelerationIncludingGravity.x || 0;
+            tilt.current = clamp(-x / 3, -1, 1);
+          }
+        });
+      } catch (e) {
+        console.error("Motion not supported", e);
+      }
     };
     setupMotion();
 
@@ -148,13 +148,15 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
 
     // --- MOVEMENT ---
     const baseSpeed = playerForm === "snowman" ? 10 : 20;
-    
+
     // Apply tilt to horizontal velocity
-    let targetX = position.current.x + (tilt.current * baseSpeed * dt * 2);
+    let targetX = position.current.x + tilt.current * baseSpeed * dt * 2;
 
     // Keyboard overrides for debugging/desktop
-    if (keys.current["ArrowLeft"] || keys.current["KeyA"]) targetX -= baseSpeed * dt;
-    if (keys.current["ArrowRight"] || keys.current["KeyD"]) targetX += baseSpeed * dt;
+    if (keys.current["ArrowLeft"] || keys.current["KeyA"])
+      targetX -= baseSpeed * dt;
+    if (keys.current["ArrowRight"] || keys.current["KeyD"])
+      targetX += baseSpeed * dt;
 
     // Smooth lateral movement
     position.current.x = lerp(position.current.x, targetX, dt * 5);
@@ -174,12 +176,12 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     if (
       playerForm === "kitten" &&
       (keys.current["Space"] || keys.current["ArrowUp"]) &&
-      !isJumping.current && 
+      !isJumping.current &&
       position.current.y <= terrainHeight + 0.5
     ) {
-        velocity.current.y = 12;
-        isJumping.current = true;
-        AudioSystem.playSFX('jump');
+      velocity.current.y = 12;
+      isJumping.current = true;
+      AudioSystem.playSFX("jump");
     }
 
     // Gravity
@@ -212,39 +214,39 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     // --- PHOTOGRAPHY ---
     if (keys.current["KeyC"] && time - lastPhotoTime.current > 1.0) {
       lastPhotoTime.current = time;
-      
+
       if (useGameStore.getState().inventory.filmRolls > 0) {
-          AudioSystem.playSFX("camera");
-          Haptics.impact({ style: ImpactStyle.Heavy });
-          
-          let captured = false;
+        AudioSystem.playSFX("camera");
+        Haptics.impact({ style: ImpactStyle.Heavy });
 
-          if (enemiesRef?.current) {
-            const camDir = new THREE.Vector3();
-            camera.getWorldDirection(camDir);
+        let captured = false;
 
-            enemiesRef.current.forEach((enemy) => {
-              const toEnemy = new THREE.Vector3()
-                .subVectors(enemy.position, camera.position)
-                .normalize();
-              const dot = camDir.dot(toEnemy);
-              const dist = camera.position.distanceTo(enemy.position);
+        if (enemiesRef?.current) {
+          const camDir = new THREE.Vector3();
+          camera.getWorldDirection(camDir);
 
-              if (dot > 0.9 && dist < 50) {
-                addPhoto("enemy");
-                addScore(500);
-                enemy.hit(); 
-                captured = true;
-              }
-            });
-          }
+          enemiesRef.current.forEach((enemy) => {
+            const toEnemy = new THREE.Vector3()
+              .subVectors(enemy.position, camera.position)
+              .normalize();
+            const dot = camDir.dot(toEnemy);
+            const dist = camera.position.distanceTo(enemy.position);
 
-          if (!captured) {
-            addPhoto("glitch"); 
-          }
+            if (dot > 0.9 && dist < 50) {
+              addPhoto("enemy");
+              addScore(500);
+              enemy.hit();
+              captured = true;
+            }
+          });
+        }
+
+        if (!captured) {
+          addPhoto("glitch");
+        }
       }
     }
-    
+
     // --- COMBAT / COLLISION ---
     if (enemiesRef?.current) {
       enemiesRef.current.forEach((enemy) => {
@@ -252,17 +254,17 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
         if (dist < 1.5) {
           if (playerForm === "snowman") {
             Haptics.impact({ style: ImpactStyle.Heavy });
-            AudioSystem.playSFX('impact');
+            AudioSystem.playSFX("impact");
             enemy.hit();
             addScore(200);
           } else if (isJumping.current) {
             Haptics.impact({ style: ImpactStyle.Medium });
-            AudioSystem.playSFX('impact');
+            AudioSystem.playSFX("impact");
             enemy.hit();
             addScore(100);
           } else {
             Haptics.vibrate({ duration: 200 });
-            AudioSystem.playSFX('impact');
+            AudioSystem.playSFX("impact");
             decreaseWarmth(15);
             enemy.hit();
             // Deterministic curse chance
@@ -281,11 +283,11 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
         if (dist < 2.0) {
           if (item.type === "cocoa") {
             Haptics.notification({ type: "success" });
-            AudioSystem.playSFX('cocoa');
+            AudioSystem.playSFX("cocoa");
             increaseWarmth(30);
             if (playerForm === "snowman") {
               setPlayerForm("kitten");
-              addScore(500); 
+              addScore(500);
             }
           }
           item.collect();

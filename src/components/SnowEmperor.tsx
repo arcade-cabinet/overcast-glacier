@@ -11,7 +11,7 @@ export const SnowEmperor = ({
 }) => {
   const group = useRef<THREE.Group>(null);
   const coreMesh = useRef<THREE.Mesh>(null);
-  
+
   const bossHealth = useGameStore((state) => state.bossHealth);
   const bossPhase = useGameStore((state) => state.bossPhase);
   const _damageBoss = useGameStore((state) => state.damageBoss);
@@ -39,10 +39,10 @@ export const SnowEmperor = ({
 
     // Core Animation
     if (coreMesh.current) {
-        coreMesh.current.scale.setScalar(1 + Math.sin(time * 5) * 0.1);
-        if (bossPhase === 4) {
-            coreMesh.current.position.x = Math.sin(time * 20) * 0.2;
-        }
+      coreMesh.current.scale.setScalar(1 + Math.sin(time * 5) * 0.1);
+      if (bossPhase === 4) {
+        coreMesh.current.position.x = Math.sin(time * 20) * 0.2;
+      }
     }
 
     // Phase 2+ Agitated shake
@@ -93,42 +93,45 @@ export const SnowEmperor = ({
 
       {/* Floating Shards (Attack telegraphs) */}
       {shards.map((_, i) => (
-        <Shard 
-            key={i} 
-            index={i} 
-            total={shardCount} 
-            phase={bossPhase} 
-        />
+        <Shard key={i} index={i} total={shardCount} phase={bossPhase} />
       ))}
     </group>
   );
 };
 
-const Shard = ({ index, total, phase }: { index: number; total: number; phase: number }) => {
-    const mesh = useRef<THREE.Mesh>(null);
-    const angle = (index / total) * Math.PI * 2;
-    
-    useFrame((state) => {
-        if (!mesh.current) return;
-        const time = state.clock.elapsedTime;
-        const radius = 8 + Math.sin(time + index) * 1;
-        const speed = time * (0.5 + phase * 0.2);
-        
-        mesh.current.position.x = Math.cos(angle + speed) * radius;
-        mesh.current.position.z = Math.sin(angle + speed) * radius;
-        mesh.current.position.y = 5 + Math.sin(time * 2 + index) * 2;
-        
-        mesh.current.rotation.x += 0.02;
-        mesh.current.rotation.y += 0.03;
-    });
+const Shard = ({
+  index,
+  total,
+  phase,
+}: {
+  index: number;
+  total: number;
+  phase: number;
+}) => {
+  const mesh = useRef<THREE.Mesh>(null);
+  const angle = (index / total) * Math.PI * 2;
 
-    return (
-        <mesh ref={mesh}>
-            <tetrahedronGeometry args={[0.8]} />
-            <meshStandardMaterial 
-                color={phase === 4 ? "#EF4444" : "#60A5FA"} 
-                emissive={phase === 4 ? "#7F1D1D" : "#000000"}
-            />
-        </mesh>
-    );
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const time = state.clock.elapsedTime;
+    const radius = 8 + Math.sin(time + index) * 1;
+    const speed = time * (0.5 + phase * 0.2);
+
+    mesh.current.position.x = Math.cos(angle + speed) * radius;
+    mesh.current.position.z = Math.sin(angle + speed) * radius;
+    mesh.current.position.y = 5 + Math.sin(time * 2 + index) * 2;
+
+    mesh.current.rotation.x += 0.02;
+    mesh.current.rotation.y += 0.03;
+  });
+
+  return (
+    <mesh ref={mesh}>
+      <tetrahedronGeometry args={[0.8]} />
+      <meshStandardMaterial
+        color={phase === 4 ? "#EF4444" : "#60A5FA"}
+        emissive={phase === 4 ? "#7F1D1D" : "#000000"}
+      />
+    </mesh>
+  );
 };
