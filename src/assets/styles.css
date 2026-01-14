@@ -12,22 +12,40 @@
 
   --font-heading: "Orbitron", sans-serif;
   --font-body: "VT323", monospace;
-  --font-accent: "Luckiest Guy", cursive;
 }
 
 /* Global Styles */
 body {
   background-color: var(--color-primary);
   color: var(--color-snow-white);
-  overflow: hidden;
-  touch-action: none;
-  user-select: none;
-  height: 100vh;
+  overflow: hidden; /* Prevent scroll */
+  touch-action: none; /* Disable browser zooming/panning */
+  user-select: none; /* No text selection */
+  height: 100vh; /* Fallback */
+  height: 100dvh; /* Dynamic Viewport Height */
   width: 100vw;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none; /* No bounce */
   font-family: var(--font-heading);
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
+}
+
+#root {
+    height: 100%;
+    width: 100%;
 }
 
 .drop-shadow-glow {
   filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.8));
+}
+
+/* Custom Scrollbar for Phone UI */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.3);
+  border-radius: 10px;
 }

@@ -10,35 +10,37 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
   ]);
 
   return (
-    <div className="w-64 h-96 bg-black border-4 border-gray-800 rounded-3xl flex flex-col overflow-hidden shadow-2xl origin-bottom-right animate-in fade-in slide-in-from-bottom-10">
+    <div className="w-[80vw] h-[60vh] max-w-sm max-h-[600px] bg-black border-4 border-gray-800 rounded-[2rem] flex flex-col overflow-hidden shadow-2xl">
       {/* Top Screen */}
-      <div className="flex-1 p-3 bg-primary border-b-4 border-gray-800 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-        <div className="relative z-10 flex flex-col h-full">
-          <div className="bg-glacier-blue/20 p-1 mb-2 rounded text-[10px] font-heading text-accent-ice flex justify-between">
+      <div className="flex-1 p-4 bg-primary border-b-8 border-gray-800 relative overflow-hidden flex flex-col">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+        
+        {/* Status Bar */}
+        <div className="bg-glacier-blue/20 p-2 mb-3 rounded-lg text-[10px] font-heading text-accent-ice flex justify-between shrink-0">
             <span>SIGNAL: 100%</span>
             <span>BAT: 99%</span>
-          </div>
-          <div className="flex-1 overflow-y-auto space-y-2 font-body text-green-400 text-sm">
+        </div>
+
+        {/* Message List */}
+        <div className="flex-1 overflow-y-auto space-y-3 font-body text-green-400 text-sm scrollbar-thin scrollbar-thumb-gray-700">
             {messages.map((msg, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: No unique ID for static messages
-              <div key={i} className="bg-green-900/20 p-1 rounded">
-                <span className="font-bold text-green-300">{msg.sender}:</span>{" "}
-                {msg.text}
+              // biome-ignore lint/suspicious/noArrayIndexKey: Static
+              <div key={i} className="bg-green-900/20 p-2 rounded-lg border border-green-500/20">
+                <span className="font-bold text-green-300 block text-xs mb-1">{msg.sender}:</span>
+                <span className="leading-snug">{msg.text}</span>
               </div>
             ))}
-            <div className="animate-pulse">_</div>
-          </div>
+            <div className="animate-pulse text-green-500">_</div>
         </div>
       </div>
 
       {/* Keypad Area */}
-      <div className="h-1/3 bg-gray-900 p-4 grid grid-cols-3 gap-2">
+      <div className="h-[35%] bg-gray-900 p-4 grid grid-cols-3 gap-2 shrink-0">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"].map((k) => (
           <button
             type="button"
             key={k}
-            className="bg-gray-800 rounded text-gray-400 text-xs font-heading hover:bg-gray-700 active:bg-gray-600"
+            className="bg-gray-800 rounded-xl text-gray-400 text-sm font-heading hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-all touch-manipulation flex items-center justify-center"
           >
             {k}
           </button>
@@ -46,7 +48,7 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
         <button
           type="button"
           onClick={onClose}
-          className="col-span-3 mt-1 bg-red-900/50 text-red-400 text-xs py-1 rounded border border-red-500/30 uppercase tracking-widest hover:bg-red-900"
+          className="col-span-3 mt-1 bg-red-900/50 text-red-400 text-xs font-bold py-2 rounded-xl border border-red-500/30 uppercase tracking-widest active:bg-red-900 active:scale-95 transition-all touch-manipulation"
         >
           Close Flip
         </button>

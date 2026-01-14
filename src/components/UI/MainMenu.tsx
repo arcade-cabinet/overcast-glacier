@@ -8,35 +8,35 @@ export const MainMenu = () => {
   if (gameState !== "menu") return null;
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/40 backdrop-blur-sm">
-      <h1 className="text-5xl font-heading text-white mb-8 drop-shadow-lg text-center">
+    <div className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/60 backdrop-blur-sm p-6 animate-in fade-in duration-500">
+      <h1 className="text-5xl sm:text-7xl font-heading text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 mb-12 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] text-center leading-tight">
         READY TO
         <br />
-        GLITCH?
+        <span className="text-accent-ice">GLITCH?</span>
       </h1>
 
-      <div className="flex flex-col gap-4 w-64">
+      <div className="flex flex-col gap-6 w-full max-w-xs sm:max-w-sm">
         <button
           type="button"
           onClick={() => {
-            console.log("Entering simulation...");
             setGameState("playing");
           }}
-          className="bg-accent-ice hover:bg-frost-highlight text-primary font-heading font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(125,211,252,0.6)] transform hover:scale-105 transition-all"
+          className="bg-accent-ice text-primary font-heading font-bold text-xl py-6 rounded-2xl shadow-[0_0_30px_rgba(125,211,252,0.4)] active:scale-95 transition-all touch-manipulation relative overflow-hidden group"
         >
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
           ENTER SIMULATION
         </button>
 
-        <button
-          type="button"
-          className="bg-gray-800 hover:bg-gray-700 text-white font-body py-2 rounded-lg border border-gray-600"
+        <button 
+            type="button" 
+            className="bg-gray-800/80 text-white font-body text-lg py-4 rounded-xl border border-gray-600 active:bg-gray-700 active:scale-95 transition-all touch-manipulation"
         >
           SETTINGS
         </button>
       </div>
 
-      <div className="mt-8 text-white font-body">
-        LAST RUN: {Math.floor(score)}
+      <div className="mt-12 text-white/70 font-body tracking-widest text-sm">
+        LAST RUN: <span className="text-accent-ice font-bold">{Math.floor(score)}</span>
       </div>
     </div>
   );
