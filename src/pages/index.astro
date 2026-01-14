@@ -1,0 +1,22 @@
+---
+import GameLayout from '../layouts/GameLayout.astro';
+import { GameCanvas } from '../components/GameCanvas';
+import { HUD } from '../components/HUD';
+import { SplashScreen } from '../components/UI/SplashScreen';
+import { MainMenu } from '../components/UI/MainMenu';
+---
+
+<GameLayout title="Overcast: Glaciers!">
+	<main class="h-full w-full relative">
+        <GameCanvas client:only="react" />
+        <HUD client:only="react" />
+        <SplashScreen client:only="react" />
+        <MainMenu client:only="react" />
+	</main>
+</GameLayout>
+
+<style>
+    .drop-shadow-glow {
+        filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.8));
+    }
+</style>

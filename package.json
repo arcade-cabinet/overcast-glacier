@@ -1,0 +1,36 @@
+{
+  "name": "overcast-glaciers",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18",
+    "astro": "^5.16.9",
+    "howler": "^2.2.4",
+    "miniplex": "^2.0.0",
+    "miniplex-react": "^2.0.1",
+    "postprocessing": "^6.38.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "simplex-noise": "^4.0.3",
+    "tailwindcss": "^4.1.18",
+    "three": "^0.182.0",
+    "zustand": "^5.0.10"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3"
+  }
+}
