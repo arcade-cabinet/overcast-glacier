@@ -11,6 +11,7 @@
 *   **State Management:** Zustand.
 *   **ECS (Entity Component System):** Miniplex.
 *   **AI:** Yuka (Steering behaviors, Finite State Machines).
+*   **Audio:** Web Audio API (Procedural Synthesis).
 *   **Styling:** Tailwind CSS (v4).
 *   **Testing:** Vitest (Unit), Playwright (E2E).
 
@@ -29,8 +30,15 @@
 
 ### 3. Procedural Generation
 *   **Terrain:** Generated in moving chunks relative to player Z-position.
-*   **Biomes:** Determined by Perlin noise or deterministic math functions based on Z-depth.
+*   **Biomes:** Deterministic noise-based generation using `GAME_CONFIG`.
 
-### 4. Game Loop
-*   Driven by R3F `useFrame`.
-*   Fixed time-step logic where possible (AI/Physics).
+### 4. Audio Engine
+*   **ProceduralAudio:** Singleton managing `AudioContext`.
+*   **Atmosphere:** Synthesized Wind (Pink Noise + LFO) and Ice Crackles.
+*   **SFX:** Oscillators and envelopes for UI/Gameplay feedback.
+*   **Music:** Generative Minor Pentatonic sequencer.
+
+### 5. CI/CD
+*   **GitHub Actions:**
+    *   `ci.yml`: Lint, Test (Unit + E2E), Build.
+    *   `deploy.yml`: Deploy to GitHub Pages + Build Android Debug APK.

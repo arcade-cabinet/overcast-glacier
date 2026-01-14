@@ -10,8 +10,9 @@ export class EnemyVehicle extends YUKA.Vehicle {
     this.enemyType = type;
     this.maxSpeed = GAME_CONFIG.enemies[type].speed;
     this.boundingRadius = GAME_CONFIG.enemies[type].radius;
-    // this.maxForce = 10;
-    // this.mass = 1;
+    
+    // Default Smoothing
+    this.smoother = new YUKA.Smoother(5);
   }
 }
 
@@ -25,9 +26,12 @@ export class IdleState extends YUKA.State<EnemyVehicle> {
   execute(vehicle: EnemyVehicle) {
     if (vehicle.playerRef) {
       const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
-      if (dist < 25) {
+      if (dist < 30) { // Increased awareness range
         vehicle.stateMachine.changeTo("CHASE");
-      } else if (vehicle.enemyType === "glitch_imp" && Math.random() > 0.99) {
+      } else if (
+        vehicle.enemyType === "glitch_imp" &&
+        Math.random() > 0.99
+      ) {
         vehicle.stateMachine.changeTo("PATROL");
       }
     }
@@ -37,17 +41,21 @@ export class IdleState extends YUKA.State<EnemyVehicle> {
 export class ChaseState extends YUKA.State<EnemyVehicle> {
   enter(vehicle: EnemyVehicle) {
     if (vehicle.playerRef) {
+      // Seek Player
       const seekBehavior = new YUKA.SeekBehavior(vehicle.playerRef.position);
       vehicle.steering.add(seekBehavior);
-
-      // Context Aware: If player is far, maybe sprint? (increase maxSpeed temporarily)
+      
+      // Separation (Don't stack)
+      const separationBehavior = new YUKA.SeparationBehavior();
+      separationBehavior.weight = 2; // High priority to avoid clipping
+      vehicle.steering.add(separationBehavior);
     }
   }
 
   execute(vehicle: EnemyVehicle) {
     if (vehicle.playerRef) {
       const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
-      if (dist > 35) {
+      if (dist > 45) { // Give up distance
         vehicle.stateMachine.changeTo("IDLE");
       }
     }
@@ -64,24 +72,29 @@ export class PatrolState extends YUKA.State<EnemyVehicle> {
 
   enter(vehicle: EnemyVehicle) {
     this.timer = 0;
+    
     const wanderBehavior = new YUKA.WanderBehavior();
-    wanderBehavior.amount = 0.5;
-    wanderBehavior.radius = 2;
+    wanderBehavior.amount = 0.8;
+    wanderBehavior.radius = 4;
     vehicle.steering.add(wanderBehavior);
+
+    const separationBehavior = new YUKA.SeparationBehavior();
+    separationBehavior.weight = 1;
+    vehicle.steering.add(separationBehavior);
   }
 
   execute(vehicle: EnemyVehicle) {
     this.timer++;
-
+    
     if (vehicle.playerRef) {
-      const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
-      if (dist < 25) {
-        vehicle.stateMachine.changeTo("CHASE");
-        return;
-      }
+        const dist = vehicle.position.distanceTo(vehicle.playerRef.position);
+        if (dist < 20) {
+            vehicle.stateMachine.changeTo("CHASE");
+            return;
+        }
     }
 
-    if (this.timer > 200 || Math.random() > 0.99) {
+    if (this.timer > 300 || Math.random() > 0.995) {
       vehicle.stateMachine.changeTo("IDLE");
     }
   }
