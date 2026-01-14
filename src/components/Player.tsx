@@ -3,7 +3,7 @@ import { Motion } from "@capacitor/motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { AudioSystem } from "../lib/audio";
+import { AudioSystem } from "../lib/audio/ProceduralAudio";
 import { getHeightAt } from "../lib/procedural";
 import { clamp, lerp } from "../lib/utils";
 import { useGameStore } from "../stores/useGameStore";

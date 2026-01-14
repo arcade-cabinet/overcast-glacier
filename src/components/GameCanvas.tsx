@@ -1,23 +1,38 @@
 import { Canvas } from "@react-three/fiber";
+import { Suspense, useEffect } from "react";
 import {
   Bloom,
   EffectComposer,
   Noise,
   Vignette,
 } from "@react-three/postprocessing";
-import { Suspense } from "react";
 import {
   CollectibleRenderer,
   EnemyRenderer,
   PlayerEntity,
 } from "../ecs/entities";
-import { AISystem, CollisionSystem, PhysicsSystem } from "../ecs/systems";
+import { CollisionSystem, PhysicsSystem, AISystem } from "../ecs/systems";
 import { MountainScene } from "../scenes/MountainScene";
 import { GlobalSnow } from "./GlobalSnow";
 import { ParallaxBackground } from "./ParallaxBackground";
 import { Resize } from "./Resize";
+import { AudioSystem } from "../lib/audio/ProceduralAudio";
 
 export const GameCanvas = () => {
+  useEffect(() => {
+    const startAudio = () => {
+      AudioSystem.init();
+      window.removeEventListener("click", startAudio);
+      window.removeEventListener("touchstart", startAudio);
+    };
+    window.addEventListener("click", startAudio);
+    window.addEventListener("touchstart", startAudio);
+    return () => {
+        window.removeEventListener("click", startAudio);
+        window.removeEventListener("touchstart", startAudio);
+    }
+  }, []);
+
   return (
     <div className="h-full w-full bg-primary relative">
       <Canvas
