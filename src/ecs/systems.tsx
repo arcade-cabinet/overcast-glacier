@@ -1,4 +1,7 @@
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import * as YUKA from "yuka";
+import { ChaseState, EnemyVehicle, IdleState, PatrolState } from "../lib/ai/EnemyAI";
 import { getBiomeAt, getHeightAt } from "../lib/procedural";
 import { useGameStore } from "../stores/useGameStore";
 import { world } from "./world";
@@ -8,11 +11,9 @@ export const PhysicsSystem = () => {
   useFrame((_state, delta) => {
     const dt = Math.min(delta, 0.1);
 
-    // Query entities with position and velocity
     const movingEntities = world.with("position", "velocity");
 
     for (const entity of movingEntities) {
-      // Apply Gravity
       if (entity.gravity) {
         const biome = getBiomeAt(entity.position.z);
         const terrainHeight = getHeightAt(
@@ -24,21 +25,105 @@ export const PhysicsSystem = () => {
         if (entity.position.y > terrainHeight) {
           entity.velocity.y -= 30 * dt;
         } else if (entity.velocity.y < 0) {
-          // Ground collision
           entity.velocity.y = 0;
           entity.position.y = terrainHeight;
         }
       }
 
-      // Move
+      // Explicitly integrate position for non-Yuka entities or Y override
+      // Note: Yuka handles X/Z steering, but we might want manual gravity on Y.
       entity.position.addScaledVector(entity.velocity, dt);
 
-      // Cleanup Projectiles
       if (entity.tag === "projectile" && entity.position.y < -50) {
         world.remove(entity);
       }
     }
   });
+  return null;
+};
+
+// --- AI SYSTEM (YUKA) ---
+export const AISystem = () => {
+  // Yuka Manager
+  const entityManager = new YUKA.EntityManager();
+  // Map ECS Entity -> Yuka Vehicle
+  const entityMap = new Map<any, EnemyVehicle>();
+  // Player proxy in Yuka world (so enemies can seek it)
+  const playerGameEntity = new YUKA.GameEntity(); 
+  entityManager.add(playerGameEntity);
+
+  useFrame((_state, delta) => {
+    const dt = Math.min(delta, 0.1);
+    
+    // Sync Player Position to Yuka
+    const player = world.with("tag", "position").where(e => e.tag === "player").first;
+    if (player) {
+        playerGameEntity.position.set(player.position.x, player.position.y, player.position.z);
+    }
+
+    // Sync Enemies
+    const enemies = world.with("tag", "enemyType", "position", "velocity");
+    const activeEntities = new Set<any>();
+
+    for (const enemy of enemies) {
+        activeEntities.add(enemy);
+        
+        let vehicle = entityMap.get(enemy);
+        if (!vehicle) {
+            // Create new Vehicle
+            vehicle = new EnemyVehicle(enemy.enemyType);
+            vehicle.position.set(enemy.position.x, enemy.position.y, enemy.position.z);
+            vehicle.playerRef = playerGameEntity;
+
+            // Setup States
+            const idleState = new IdleState();
+            const chaseState = new ChaseState();
+            const patrolState = new PatrolState();
+
+            vehicle.stateMachine.add("IDLE", idleState);
+            vehicle.stateMachine.add("CHASE", chaseState);
+            vehicle.stateMachine.add("PATROL", patrolState);
+            
+            vehicle.stateMachine.changeTo("IDLE");
+
+            entityManager.add(vehicle);
+            entityMap.set(enemy, vehicle);
+        }
+
+        // 1. Sync Physics -> Yuka (If external physics affected position, e.g. collisions/teleport)
+        // Actually, Yuka drives velocity for X/Z. We let PhysicsSystem handle Y (gravity).
+        // So we sync Y from ECS to Yuka so Yuka knows 3D distance?
+        vehicle.position.y = enemy.position.y; 
+    }
+
+    // Update Yuka
+    entityManager.update(dt);
+
+    // Sync Yuka -> ECS
+    for (const enemy of enemies) {
+        const vehicle = entityMap.get(enemy);
+        if (vehicle) {
+            // Copy calculated velocity from Yuka to ECS
+            // We preserve ECS Y velocity (gravity)
+            enemy.velocity.x = vehicle.velocity.x;
+            enemy.velocity.z = vehicle.velocity.z;
+            
+            // Or if Yuka manages position integration completely (for X/Z):
+            // enemy.position.x = vehicle.position.x;
+            // enemy.position.z = vehicle.position.z;
+            // But PhysicsSystem does "position.addScaledVector(velocity)", so passing velocity is better integration.
+        }
+    }
+
+    // Cleanup dead entities
+    for (const [entity, vehicle] of entityMap) {
+        if (!activeEntities.has(entity)) {
+            entityManager.remove(vehicle);
+            entityMap.delete(entity);
+        }
+    }
+  });
+
   return null;
 };
 

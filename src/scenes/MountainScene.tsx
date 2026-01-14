@@ -88,6 +88,8 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
       const entity = world.add({
         tag: "enemy",
         position: new THREE.Vector3(ex, ey, ez),
+        velocity: new THREE.Vector3(0, 0, 0),
+        gravity: true,
         radius: 1.0,
         enemyType: type,
       });

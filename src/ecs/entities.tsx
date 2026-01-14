@@ -163,17 +163,17 @@ export const EnemyRenderer = ({
 }) => {
   const register = onRegister || (() => () => {});
   return (
-    <ECS.Entities in={ECS.world.with("tag", "enemyType")}>
+    <ECS.Entities in={ECS.world.with("tag", "enemyType", "position", "velocity")}>
       {(entity) => (
         <group position={entity.position}>
           {entity.enemyType === "snowman" && (
-            <Snowman position={[0, 0, 0]} onRegister={register} />
+            <Snowman entity={entity} onRegister={register} />
           )}
           {entity.enemyType === "polar_bear" && (
-            <PolarBear position={[0, 0, 0]} onRegister={register} />
+            <PolarBear entity={entity} onRegister={register} />
           )}
           {entity.enemyType === "glitch_imp" && (
-            <GlitchImp position={[0, 0, 0]} onRegister={register} />
+            <GlitchImp entity={entity} onRegister={register} />
           )}
         </group>
       )}

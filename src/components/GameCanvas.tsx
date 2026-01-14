@@ -6,7 +6,7 @@ import {
   PlayerEntity,
 } from "../ecs/entities";
 // import { ECS } from '../ecs/world';
-import { CollisionSystem, PhysicsSystem } from "../ecs/systems";
+import { CollisionSystem, PhysicsSystem, AISystem } from "../ecs/systems";
 import { MountainScene } from "../scenes/MountainScene";
 import { GlobalSnow } from "./GlobalSnow";
 import { ParallaxBackground } from "./ParallaxBackground";
@@ -36,6 +36,7 @@ export const GameCanvas = () => {
           <MountainScene />
 
           <PhysicsSystem />
+          <AISystem />
           <CollisionSystem />
         </Suspense>
       </Canvas>
