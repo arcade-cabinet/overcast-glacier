@@ -15,7 +15,7 @@ export const MainMenu = () => {
         <span className="text-accent-ice">GLITCH?</span>
       </h1>
 
-      <div className="flex flex-col gap-6 w-full max-w-xs sm:max-w-sm">
+      <div className="flex flex-col landscape:flex-row gap-6 w-full max-w-xs sm:max-w-sm landscape:max-w-2xl landscape:items-center">
         <button
           type="button"
           onClick={() => {

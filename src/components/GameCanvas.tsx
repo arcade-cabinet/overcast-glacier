@@ -17,6 +17,8 @@ import { GlobalSnow } from "./GlobalSnow";
 import { ParallaxBackground } from "./ParallaxBackground";
 import { Resize } from "./Resize";
 import { AudioSystem } from "../lib/audio/ProceduralAudio";
+import { Loader } from "./UI/Loader";
+import { Html } from "@react-three/drei";
 
 export const GameCanvas = () => {
   useEffect(() => {
@@ -47,7 +49,7 @@ export const GameCanvas = () => {
         }}
       >
         <Resize />
-        <Suspense fallback={null}>
+        <Suspense fallback={<Html center><Loader /></Html>}>
           <ambientLight intensity={0.4} color="#7DD3FC" />
           <directionalLight
             position={[10, 20, 10]}
