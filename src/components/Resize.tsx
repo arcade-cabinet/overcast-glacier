@@ -9,13 +9,13 @@ export const Resize = () => {
     const aspect = size.width / size.height;
     if (aspect < 1) {
       // Portrait
-      // @ts-expect-error
+      // @ts-expect-error - camera.fov only exists on PerspectiveCamera but useThree returns generic Camera type
       camera.fov = 80;
       camera.position.z = 15; // Pull back slightly
       camera.position.y = 7;
     } else {
       // Landscape
-      // @ts-expect-error
+      // @ts-expect-error - camera.fov only exists on PerspectiveCamera but useThree returns generic Camera type
       camera.fov = 60;
       camera.position.z = 10;
       camera.position.y = 5;
