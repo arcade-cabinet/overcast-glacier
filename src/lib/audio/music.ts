@@ -2,7 +2,7 @@ import { GameRNG } from "../rng";
 import { AudioContextManager } from "./core";
 
 // Minor Pentatonic Scale Frequencies (roughly A minor)
-const SCALE = [220, 261.63, 293.66, 329.63, 392.00, 440, 523.25];
+const SCALE = [220, 261.63, 293.66, 329.63, 392.0, 440, 523.25];
 
 export class MusicSynth {
   private ctx: AudioContext;
@@ -27,24 +27,27 @@ export class MusicSynth {
 
   stop() {
     this.isPlaying = false;
-    this.masterGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 2);
+    this.masterGain.gain.exponentialRampToValueAtTime(
+      0.001,
+      this.ctx.currentTime + 2,
+    );
   }
 
   private startDrone() {
     // Low pad
     const osc = this.ctx.createOscillator();
-    osc.type = 'sawtooth';
+    osc.type = "sawtooth";
     osc.frequency.value = 110; // Low A
-    
+
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
+    filter.type = "lowpass";
     filter.frequency.value = 200;
 
     const lfo = this.ctx.createOscillator();
     lfo.frequency.value = 0.1;
     const lfoGain = this.ctx.createGain();
     lfoGain.gain.value = 100;
-    
+
     lfo.connect(lfoGain);
     lfoGain.connect(filter.frequency);
 
@@ -57,7 +60,7 @@ export class MusicSynth {
 
     osc.start();
     lfo.start();
-    
+
     // Stop logic handled by master gain mute on stop
   }
 
@@ -68,7 +71,7 @@ export class MusicSynth {
     while (this.nextNoteTime < this.ctx.currentTime + 0.5) {
       this.playRandomNote(this.nextNoteTime);
       // Random interval between notes
-      this.nextNoteTime += GameRNG.range(1, 3); 
+      this.nextNoteTime += GameRNG.range(1, 3);
     }
 
     setTimeout(() => this.scheduleNotes(), 200);
@@ -77,14 +80,14 @@ export class MusicSynth {
   private playRandomNote(time: number) {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    
+
     // Choose random note from scale
     const freq = SCALE[Math.floor(GameRNG.next() * SCALE.length)];
-    
+
     // Occasional octave jump for "glitch" feel
     const octave = GameRNG.chance(0.2) ? 2 : 1;
-    
-    osc.type = GameRNG.chance(0.5) ? 'sine' : 'triangle';
+
+    osc.type = GameRNG.chance(0.5) ? "sine" : "triangle";
     osc.frequency.setValueAtTime(freq * octave, time);
 
     // Envelope
@@ -100,7 +103,7 @@ export class MusicSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
-    
+
     // Send to delay
     gain.connect(delay);
     delay.connect(delayGain);

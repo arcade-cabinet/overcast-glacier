@@ -14,7 +14,7 @@ test("mobile layout renders correctly", async ({ page }) => {
   await expect(startButton).toBeVisible({ timeout: 10000 });
 
   // Start Game
-  await startButton.tap();
+  await startButton.click();
 
   // Check HUD elements
   // Note: Phone button is an icon, checking by label if we added one, or class
@@ -23,14 +23,14 @@ test("mobile layout renders correctly", async ({ page }) => {
   await expect(phoneButton).toBeVisible();
 
   // Open Phone
-  await phoneButton.tap();
+  await phoneButton.click();
 
   // Check Flip Phone is visible
-  const flipPhone = page.getByText("Signal: 100%");
+  const flipPhone = page.getByText(/SIGNAL: 100%/i);
   await expect(flipPhone).toBeVisible();
 
   // Close Phone
-  await page.getByRole("button", { name: /Close Flip/i }).tap();
+  await page.getByRole("button", { name: /Close Flip/i }).click();
   await expect(flipPhone).not.toBeVisible();
 
   await page.screenshot({ path: "e2e-screenshots/mobile-gameplay.png" });
