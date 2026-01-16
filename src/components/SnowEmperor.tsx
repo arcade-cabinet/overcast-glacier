@@ -1,8 +1,8 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useState, useMemo } from "react";
-import * as THREE from "three";
-import { useGameStore } from "../stores/useGameStore";
+import { useMemo, useRef, useState } from "react";
+import type * as THREE from "three";
 import { GameRNG } from "../lib/rng";
+import { useGameStore } from "../stores/useGameStore";
 
 export const SnowEmperor = ({
   position,

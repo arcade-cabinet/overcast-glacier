@@ -1,46 +1,48 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGameStore } from "../stores/useGameStore";
 import { CameraUI } from "./CameraUI";
 import { FlipPhone } from "./FlipPhone";
 
 const TouchRipple = ({ x, y }: { x: number; y: number }) => {
-    return (
-        <div 
-            className="absolute rounded-full border-2 border-white/50 animate-ping pointer-events-none"
-            style={{ 
-                left: x - 25, 
-                top: y - 25, 
-                width: 50, 
-                height: 50,
-                animationDuration: '0.4s'
-            }}
-        />
-    );
-}
+  return (
+    <div
+      className="absolute rounded-full border-2 border-white/50 animate-ping pointer-events-none"
+      style={{
+        left: x - 25,
+        top: y - 25,
+        width: 50,
+        height: 50,
+        animationDuration: "0.4s",
+      }}
+    />
+  );
+};
 
 export const HUD = () => {
   const score = useGameStore((state) => state.score);
   const warmth = useGameStore((state) => state.warmth);
   const gameState = useGameStore((state) => state.gameState);
   const [phoneOpen, setPhoneOpen] = useState(false);
-  const [ripples, setRipples] = useState<{x: number, y: number, id: number}[]>([]);
+  const [ripples, setRipples] = useState<
+    { x: number; y: number; id: number }[]
+  >([]);
 
   useEffect(() => {
-      const handleTouch = (e: TouchEvent) => {
-          if (gameState !== "playing") return;
-          const newRipples = Array.from(e.changedTouches).map(t => ({
-              x: t.clientX,
-              y: t.clientY,
-              id: Date.now() + Math.random()
-          }));
-          setRipples(prev => [...prev, ...newRipples]);
-          setTimeout(() => {
-              setRipples(prev => prev.filter(r => !newRipples.includes(r)));
-          }, 400);
-      };
-      
-      window.addEventListener('touchstart', handleTouch);
-      return () => window.removeEventListener('touchstart', handleTouch);
+    const handleTouch = (e: TouchEvent) => {
+      if (gameState !== "playing") return;
+      const newRipples = Array.from(e.changedTouches).map((t) => ({
+        x: t.clientX,
+        y: t.clientY,
+        id: Date.now() + Math.random(),
+      }));
+      setRipples((prev) => [...prev, ...newRipples]);
+      setTimeout(() => {
+        setRipples((prev) => prev.filter((r) => !newRipples.includes(r)));
+      }, 400);
+    };
+
+    window.addEventListener("touchstart", handleTouch);
+    return () => window.removeEventListener("touchstart", handleTouch);
   }, [gameState]);
 
   if (gameState !== "playing") return null;
@@ -48,9 +50,11 @@ export const HUD = () => {
   return (
     <div className="absolute inset-0 pointer-events-none select-none touch-none overflow-hidden">
       <CameraUI />
-      
+
       {/* Visual Touch Feedback */}
-      {ripples.map(r => <TouchRipple key={r.id} x={r.x} y={r.y} />)}
+      {ripples.map((r) => (
+        <TouchRipple key={r.id} x={r.x} y={r.y} />
+      ))}
 
       {/* Top Bar - Responsive Padding */}
       <div className="flex justify-between p-[max(2vh,1rem)] w-full max-w-7xl mx-auto">
@@ -67,10 +71,12 @@ export const HUD = () => {
         {/* Warmth Meter */}
         <div className="bg-black/50 backdrop-blur-md p-3 rounded-2xl border border-accent-ice/30 w-[40vw] max-w-xs flex flex-col justify-center">
           <div className="flex justify-between items-center mb-1">
-             <div className="text-[10px] sm:text-xs text-accent-ice font-heading uppercase">
-                Warmth
-             </div>
-             <div className="text-[10px] text-white/80">{Math.round(warmth)}%</div>
+            <div className="text-[10px] sm:text-xs text-accent-ice font-heading uppercase">
+              Warmth
+            </div>
+            <div className="text-[10px] text-white/80">
+              {Math.round(warmth)}%
+            </div>
           </div>
           <div className="h-3 sm:h-4 bg-gray-800 rounded-full overflow-hidden">
             <div
@@ -103,7 +109,7 @@ export const HUD = () => {
       {/* Touch Hints */}
       <div className="absolute inset-x-0 bottom-8 flex justify-center opacity-50 pointer-events-none">
         <div className="text-white/50 text-xs font-heading tracking-widest hidden sm:block">
-            TILT TO STEER • TAP LEFT TO JUMP • TAP RIGHT TO SHOOT
+          TILT TO STEER • TAP LEFT TO JUMP • TAP RIGHT TO SHOOT
         </div>
       </div>
     </div>

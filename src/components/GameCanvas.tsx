@@ -1,24 +1,24 @@
+import { Html } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect } from "react";
 import {
   Bloom,
   EffectComposer,
   Noise,
   Vignette,
 } from "@react-three/postprocessing";
+import { Suspense, useEffect } from "react";
 import {
   CollectibleRenderer,
   EnemyRenderer,
   PlayerEntity,
 } from "../ecs/entities";
-import { CollisionSystem, PhysicsSystem, AISystem } from "../ecs/systems";
+import { AISystem, CollisionSystem, PhysicsSystem } from "../ecs/systems";
+import { AudioSystem } from "../lib/audio/ProceduralAudio";
 import { MountainScene } from "../scenes/MountainScene";
 import { GlobalSnow } from "./GlobalSnow";
 import { ParallaxBackground } from "./ParallaxBackground";
 import { Resize } from "./Resize";
-import { AudioSystem } from "../lib/audio/ProceduralAudio";
 import { Loader } from "./UI/Loader";
-import { Html } from "@react-three/drei";
 
 export const GameCanvas = () => {
   useEffect(() => {
@@ -49,7 +49,13 @@ export const GameCanvas = () => {
         }}
       >
         <Resize />
-        <Suspense fallback={<Html center><Loader /></Html>}>
+        <Suspense
+          fallback={
+            <Html center>
+              <Loader />
+            </Html>
+          }
+        >
           <ambientLight intensity={0.4} color="#7DD3FC" />
           <directionalLight
             position={[10, 20, 10]}

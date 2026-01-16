@@ -24,19 +24,22 @@ export class AtmosphereSynth {
   stop() {
     this.isPlaying = false;
     // Disconnect/stop logic would go here for full cleanup
-    this.masterGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1);
+    this.masterGain.gain.exponentialRampToValueAtTime(
+      0.001,
+      this.ctx.currentTime + 1,
+    );
   }
 
   private startWind() {
     // Pink noise source
-    const buffer = createNoiseBuffer(this.ctx, 'pink', 5);
+    const buffer = createNoiseBuffer(this.ctx, "pink", 5);
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
 
     // Lowpass filter to simulate muffled wind
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
+    filter.type = "lowpass";
     filter.frequency.value = 400;
     filter.Q.value = 1;
 
@@ -46,9 +49,9 @@ export class AtmosphereSynth {
 
     // LFO for gusts (Low Frequency Oscillator)
     const lfo = this.ctx.createOscillator();
-    lfo.type = 'sine';
+    lfo.type = "sine";
     lfo.frequency.value = 0.1; // Very slow gusts
-    
+
     // Connect LFO to filter frequency for dynamic "whooshing"
     const lfoGain = this.ctx.createGain();
     lfoGain.gain.value = 200; // Modulate frequency by +/- 200Hz
@@ -67,7 +70,7 @@ export class AtmosphereSynth {
   private startIceCrackles() {
     const loop = () => {
       if (!this.isPlaying) return;
-      
+
       const delay = GameRNG.range(2000, 7000); // Random crackle every 2-7s
       setTimeout(() => {
         this.triggerCrackle();
@@ -83,11 +86,14 @@ export class AtmosphereSynth {
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
 
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(GameRNG.range(2000, 3000), this.ctx.currentTime);
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(
+      GameRNG.range(2000, 3000),
+      this.ctx.currentTime,
+    );
     osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.1);
 
-    filter.type = 'highpass';
+    filter.type = "highpass";
     filter.frequency.value = 1500;
 
     gain.gain.setValueAtTime(0.1, this.ctx.currentTime);

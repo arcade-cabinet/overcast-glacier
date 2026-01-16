@@ -13,17 +13,18 @@ test("mobile layout renders correctly", async ({ page }) => {
   const startButton = page.getByRole("button", { name: /ENTER SIMULATION/i });
   await expect(startButton).toBeVisible({ timeout: 10000 });
 
-    // Start Game
-    await startButton.click();
-    
-    // Check HUD elements
-    // Note: Phone button is an icon, checking by label if we added one, or class
-    // We added aria-label="Open Phone" in HUD.tsx
-    const phoneButton = page.getByLabel("Open Phone");
-    await expect(phoneButton).toBeVisible();
-    
-    // Open Phone
-    await phoneButton.click();
+  // Start Game
+  await startButton.click();
+
+  // Check HUD elements
+  // Note: Phone button is an icon, checking by label if we added one, or class
+  // We added aria-label="Open Phone" in HUD.tsx
+  const phoneButton = page.getByLabel("Open Phone");
+  await expect(phoneButton).toBeVisible();
+
+  // Open Phone
+  await phoneButton.click();
+
   // Check Flip Phone is visible
   const flipPhone = page.getByText(/SIGNAL: 100%/i);
   await expect(flipPhone).toBeVisible();
