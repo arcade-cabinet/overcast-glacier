@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "overcast-glaciers",
+    "type": "game",
+    "framework": "react-three-fiber",
+    "language": "typescript"
+  },
+  "steering": {
+    "directory": "steering"
+  },
+  "features": {
+    "ecs": true,
+    "proceduralGeneration": true,
+    "proceduralAudio": true,
+    "aiSystem": true,
+    "mobileFirst": true
+  },
+  "testing": {
+    "unit": "vitest",
+    "e2e": "playwright"
+  },
+  "deployment": {
+    "web": "github-pages",
+    "mobile": "capacitor"
+  }
+}
