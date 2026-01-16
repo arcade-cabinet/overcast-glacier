@@ -8,80 +8,86 @@ inclusion: always
 
 ```
 overcast-glacier/
-├── src/
-│   ├── components/      # React components
-│   │   ├── UI/          # HUD, menus, overlays
-│   │   └── *.tsx        # Game objects (Player, Enemies, etc.)
-│   ├── config/          # Game configuration
-│   ├── ecs/             # Entity Component System (Miniplex)
-│   │   ├── world.ts     # ECS world definition
-│   │   ├── entities.tsx # Entity creation
-│   │   └── systems.tsx  # ECS systems (Physics, AI, Collision)
-│   ├── lib/             # Utilities and core systems
-│   │   ├── ai/          # Yuka AI behaviors
-│   │   ├── audio/       # Procedural audio synthesis
-│   │   ├── procedural.ts # Terrain generation
-│   │   ├── rng.ts       # Deterministic RNG
-│   │   └── utils.ts     # General utilities
-│   ├── scenes/          # Three.js scene compositions
-│   ├── stores/          # Zustand state management
-│   ├── test/            # Test setup and utilities
-│   ├── App.tsx          # Root component
-│   ├── main.tsx         # Entry point
-│   └── types.ts         # Shared type definitions
-├── e2e/                 # Playwright E2E tests
-├── docs/                # Project documentation
-│   ├── VISION.md        # Game vision and influences
-│   ├── ARCHITECTURE.md  # Technical architecture
-│   ├── GAME_DESIGN.md   # Game mechanics documentation
-│   └── BRANDING.md      # Visual identity guidelines
-├── android/             # Capacitor Android project
-├── public/              # Static assets
-└── dist/                # Build output (gitignored)
+├── apps/
+│   ├── native/               # React Native + Babylon.js (ACTIVE)
+│   │   ├── App.tsx           # Root component with all UI screens
+│   │   ├── app.json          # Expo configuration
+│   │   ├── eas.json          # EAS Build profiles
+│   │   ├── index.ts          # Entry point
+│   │   ├── package.json      # Native app dependencies
+│   │   ├── tsconfig.json     # TypeScript config
+│   │   ├── assets/           # App icons and splash
+│   │   └── src/
+│   │       ├── lib/          # Utilities
+│   │       │   └── rng.ts    # Deterministic RNG (Mulberry32)
+│   │       ├── scenes/       # Babylon.js scenes
+│   │       │   └── GameScene.tsx
+│   │       └── stores/       # State management
+│   │           └── useGameStore.ts
+│   │
+│   └── web/                  # DEPRECATED - Capacitor version
+│       └── ...               # Do not develop further
+│
+├── docs/                     # Project documentation
+│   ├── TRIAGE_1.0.md         # Release triage and roadmap
+│   ├── LOGS.md               # Project evolution log
+│   ├── VISION.md             # Game vision document
+│   └── ARCHITECTURE.md       # Technical architecture
+│
+├── .kiro/                    # Kiro AI configuration
+│   └── steering/             # Development guidelines
+│
+└── package.json              # Root workspace (if monorepo)
 ```
 
 ## File Naming Conventions
 
 | Directory | Convention | Pattern |
 |-----------|------------|---------|
-| `components/` | PascalCase | `Player.tsx`, `MainMenu.tsx` |
-| `lib/` | camelCase | `procedural.ts`, `rng.ts` |
-| `stores/` | camelCase with `use` prefix | `useGameStore.ts` |
-| `ecs/` | camelCase | `world.ts`, `systems.tsx` |
-| Tests | Match source + `.test` | `utils.test.ts` |
+| `src/scenes/` | PascalCase | `GameScene.tsx` |
+| `src/lib/` | camelCase | `rng.ts` |
+| `src/stores/` | camelCase with `use` prefix | `useGameStore.ts` |
+| `src/components/` | PascalCase | `MainMenu.tsx` |
+| Tests | Match source + `.test` | `rng.test.ts` |
 
 ## Module Boundaries
 
-### ECS Layer (`src/ecs/`)
-- Owns game state for entities
-- Systems run in `useFrame` hooks
-- Components are plain TypeScript types
+### Scene Layer (`apps/native/src/scenes/`)
+- Babylon.js scene setup and rendering
+- Terrain generation
+- Camera and lighting configuration
+- Game loop via `onBeforeRenderObservable`
 
-### Store Layer (`src/stores/`)
-- Zustand for UI-level game state
+### Store Layer (`apps/native/src/stores/`)
+- Zustand for game state management
 - Player stats, game phase, inventory
-- Persists high score to localStorage
+- Persists high score to AsyncStorage
 
-### Render Layer (`src/components/`)
-- React Three Fiber components
-- Subscribe to ECS and Zustand state
-- Pure rendering, minimal logic
+### Render Layer (`apps/native/App.tsx`)
+- React Native UI components
+- Menu, HUD, Pause, Game Over screens
+- Haptic feedback integration
 
-### Logic Layer (`src/lib/`)
-- Procedural generation algorithms
-- Deterministic RNG system
-- AI behaviors (Yuka integration)
-- Audio synthesis (Web Audio API)
+### Logic Layer (`apps/native/src/lib/`)
+- Deterministic RNG (GameRNG, TerrainRNG, AudioRNG)
+- Utilities and helpers
 
 ## Import Conventions
 
-Use the path alias for imports:
+Use relative imports within the native app:
 
 ```typescript
-// Good
-import { useGameStore } from "@/stores/useGameStore";
-import { GAME_CONFIG } from "@/config/gameConfig";
+// From App.tsx
+import { useGameStore } from "./src/stores/useGameStore";
+import { GameScene } from "./src/scenes/GameScene";
 
-// Avoid relative paths from deep nesting
-// Bad: import { useGameStore } from "../../../stores/useGameStore";
+// From scenes/
+import { TerrainRNG } from "../lib/rng";
+import { useGameStore } from "../stores/useGameStore";
 ```
+
+## Deprecated: Web Version
+
+The `apps/web/` directory contains the legacy Capacitor-based web version.
+**DO NOT** make changes to this directory. It has been deprecated in favor
+of the React Native implementation for true native mobile performance.

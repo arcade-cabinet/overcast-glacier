@@ -6,90 +6,102 @@ inclusion: always
 
 ## Overview
 
-Overcast: Glaciers! is designed mobile-first with Capacitor for native deployment.
+Overcast: Glaciers! is designed mobile-first with React Native + Expo for true native deployment.
 
 ## Target Platforms
 
-1. **Web** (primary) - GitHub Pages deployment
-2. **Android** - Capacitor APK
-3. **iOS** - Capacitor (future)
+1. **iOS** - EAS Build for App Store / TestFlight
+2. **Android** - EAS Build for Play Store
+3. **Web** - DEPRECATED (legacy Capacitor version)
 
 ## Screen Orientation
 
 **Vertical (Portrait) only**
 
-```typescript
-// Capacitor config locks orientation
-// capacitor.config.ts
+```json
+// app.json
 {
-  plugins: {
-    ScreenOrientation: {
-      // Lock to portrait
-    }
+  "expo": {
+    "orientation": "portrait"
   }
 }
 ```
 
-Test in browser DevTools mobile view (iPhone/Pixel portrait).
+Test on actual devices or Expo Go for accurate behavior.
 
 ## Touch Controls
 
-Left/Right screen halves mapped to actions:
+Left/Right screen halves mapped to actions in React Native:
 
 ```typescript
-function handleTouchStart(e: TouchEvent) {
-  const x = e.touches[0].clientX;
-  const screenMid = window.innerWidth / 2;
+import { TouchableOpacity, View } from "react-native";
 
-  if (x < screenMid) {
-    // Left half - Jump
-    jump();
-  } else {
-    // Right half - Shoot/Kick
-    shoot();
-  }
+function TouchControls({ onJump, onShoot }) {
+  return (
+    <View style={styles.controlsContainer}>
+      <TouchableOpacity
+        style={styles.leftHalf}
+        onPress={onJump}
+      />
+      <TouchableOpacity
+        style={styles.rightHalf}
+        onPress={onShoot}
+      />
+    </View>
+  );
 }
 ```
 
 ## Motion Controls (Tilt Steering)
 
-Capacitor Motion API provides device orientation:
+Expo Sensors API provides device orientation:
 
 ```typescript
-import { Motion } from "@capacitor/motion";
+import { Accelerometer } from "expo-sensors";
 
-Motion.addListener("orientation", (event) => {
-  // event.gamma: Left/right tilt (-90 to 90)
-  // Map gamma to lateral velocity
-  const tilt = event.gamma / 45; // Normalize to -2 to 2
-  player.velocity.x = tilt * LATERAL_SPEED;
-});
+useEffect(() => {
+  const subscription = Accelerometer.addListener(({ x, y, z }) => {
+    // x: Left/right tilt (-1 to 1)
+    // Map x to lateral velocity
+    const tilt = x * 2; // Scale as needed
+    player.velocity.x = tilt * LATERAL_SPEED;
+  });
+
+  Accelerometer.setUpdateInterval(16); // ~60fps
+
+  return () => subscription.remove();
+}, []);
 ```
-
-### Fallback for Web
-
-Without device motion, use keyboard arrows or pointer position.
 
 ## Haptic Feedback
 
 ```typescript
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import * as Haptics from "expo-haptics";
 
 // On enemy hit
-await Haptics.impact({ style: ImpactStyle.Medium });
+await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
 // On power-up collect
-await Haptics.impact({ style: ImpactStyle.Light });
+await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+// On menu button press
+await Haptics.selectionAsync();
 ```
 
 ## Performance Considerations
+
+### Native GPU via Babylon.js
+
+- Babylon.js React Native renders directly to OpenGL/Metal
+- No WebView overhead
+- True native performance
 
 ### Mobile GPU Limits
 
 - Keep draw calls low (< 100)
 - Use instanced meshes for repeated objects (snow, enemies)
 - Limit post-processing effects
-- Target 60 FPS (monitor with `useFrame` delta)
+- Target 60 FPS
 
 ### Memory
 
@@ -106,7 +118,7 @@ await Haptics.impact({ style: ImpactStyle.Light });
 
 ### Touch Targets
 
-- Minimum 44x44 CSS pixels
+- Minimum 44x44 points
 - Generous padding on interactive elements
 - No hover-dependent interactions
 
@@ -114,10 +126,16 @@ await Haptics.impact({ style: ImpactStyle.Light });
 
 Account for notches and system UI:
 
-```css
-.hud {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+```typescript
+import { SafeAreaView } from "react-native";
+
+function App() {
+  return (
+    <SafeAreaView style={styles.container}>
+      <GameScene />
+      <GameHUD />
+    </SafeAreaView>
+  );
 }
 ```
 
@@ -125,14 +143,31 @@ Account for notches and system UI:
 
 - Minimum 16px font size
 - High contrast (see BRANDING.md colors)
-- Use `Orbitron` for headings, `VT323` for HUD text
+- Use system fonts or custom fonts via expo-font
+
+## EAS Build Commands
+
+```bash
+# Development build (includes dev client)
+eas build --platform ios --profile development
+eas build --platform android --profile development
+
+# Preview build (internal distribution)
+eas build --platform ios --profile preview
+eas build --platform android --profile preview
+
+# Production build
+eas build --platform ios --profile production
+eas build --platform android --profile production
+```
 
 ## Testing Checklist
 
-- [ ] Test on actual mobile device (not just emulator)
+- [ ] Test on actual mobile device (not just simulator)
 - [ ] Verify touch controls respond correctly
-- [ ] Test tilt steering with device motion
+- [ ] Test tilt steering with expo-sensors
 - [ ] Check haptic feedback fires
 - [ ] Verify performance at 60 FPS
 - [ ] Test in bright sunlight conditions (contrast)
 - [ ] Test with system font size scaled up
+- [ ] Test on older devices (iPhone 8, mid-tier Android)
