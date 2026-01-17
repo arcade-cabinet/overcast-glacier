@@ -269,11 +269,11 @@ export const GameScene: React.FC = () => {
               for (const entity of oldChunk.entities) {
                 // Dispose mesh if it exists
                 if (entity.mesh) {
-                  entity.mesh.dispose();
+                  entity.mesh.dispose(false, true);
                 }
                 world.remove(entity);
               }
-              oldChunk.mesh.dispose();
+              oldChunk.mesh.dispose(false, true);
             }
           }
         }
