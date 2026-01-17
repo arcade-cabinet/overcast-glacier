@@ -69,13 +69,6 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
     const chunkSeed = Math.floor(Math.abs(zOffset));
     const chunkRNG = new RNG(chunkSeed);
 
-    interface Entity {
-      tag: string;
-      enemyType?: string;
-      position: { x: number; y: number; z: number };
-      velocity: { x: number; y: number; z: number };
-      health?: number;
-    }
     const entities: Entity[] = [];
     const enemyCount = biome === "summit" ? 0 : chunkRNG.rangeInt(2, 6);
 
