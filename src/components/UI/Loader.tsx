@@ -1,6 +1,12 @@
 export const Loader = () => {
   return (
+<<<<<<< HEAD
     <output
+=======
+    <div
+      role="status"
+      aria-live="polite"
+>>>>>>> origin/main
       aria-label="Loading simulation"
       className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-primary text-accent-ice"
     >

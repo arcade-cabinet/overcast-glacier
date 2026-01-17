@@ -7,6 +7,7 @@ import {
   MeshBuilder,
   Scene,
   StandardMaterial,
+  type Texture,
   Vector3,
 } from "@babylonjs/core";
 import { EngineView, useEngine } from "@babylonjs/react-native";
@@ -24,6 +25,15 @@ import {
 import { RNG } from "../lib/rng";
 import { useGameStore } from "../stores/useGameStore";
 import type { EnemyType } from "../types";
+
+// Type for materials that may have texture properties
+interface MaterialWithTextures {
+  dispose: () => void;
+  map?: Texture;
+  normalMap?: Texture;
+  roughnessMap?: Texture;
+  metalnessMap?: Texture;
+}
 
 const VISIBLE_CHUNKS = 5;
 
@@ -122,7 +132,10 @@ export const GameScene: React.FC = () => {
               { diameter: 1 },
               scene,
             );
-            const mat = new StandardMaterial("snowmanMat", scene);
+            const mat = new StandardMaterial(
+              `snowmanMat_${chunkIndex}_${i}`,
+              scene,
+            );
             mat.diffuseColor = Color3.White();
             mesh.material = mat;
           } else if (type === "polar_bear") {
@@ -149,13 +162,12 @@ export const GameScene: React.FC = () => {
 
           mesh.position = new Vector3(ex, ey + 1, ez);
 
-          const radius = GAME_CONFIG.enemies[type].radius;
           const entity = world.add({
             tag: "enemy",
             position: mesh.position, // Link position
             velocity: new Vector3(0, 0, 0),
             gravity: true,
-            radius,
+            radius: 1.0,
             enemyType: type,
             mesh: mesh,
           });
@@ -270,11 +282,50 @@ export const GameScene: React.FC = () => {
               for (const entity of oldChunk.entities) {
                 // Dispose mesh if it exists
                 if (entity.mesh) {
-                  entity.mesh.dispose();
+                  // Properly dispose materials and textures
+                  if (entity.mesh.material) {
+                    if (Array.isArray(entity.mesh.material)) {
+                      entity.mesh.material.forEach((mat) => {
+                        const matWithTextures = mat as MaterialWithTextures;
+                        matWithTextures.dispose();
+                        // Dispose textures if any
+                        if (matWithTextures.map) matWithTextures.map.dispose();
+                        if (matWithTextures.normalMap)
+                          matWithTextures.normalMap.dispose();
+                        if (matWithTextures.roughnessMap)
+                          matWithTextures.roughnessMap.dispose();
+                        if (matWithTextures.metalnessMap)
+                          matWithTextures.metalnessMap.dispose();
+                      });
+                    } else {
+                      const mat = entity.mesh.material as MaterialWithTextures;
+                      mat.dispose();
+                      // Dispose textures if any
+                      if (mat.map) mat.map.dispose();
+                      if (mat.normalMap) mat.normalMap.dispose();
+                      if (mat.roughnessMap) mat.roughnessMap.dispose();
+                      if (mat.metalnessMap) mat.metalnessMap.dispose();
+                    }
+                  }
+                  if (entity.mesh.geometry) {
+                    entity.mesh.geometry.dispose();
+                  }
                 }
                 world.remove(entity);
               }
-              oldChunk.mesh.dispose();
+              // Dispose chunk mesh materials and geometry
+              if (oldChunk.mesh.material) {
+                if (Array.isArray(oldChunk.mesh.material)) {
+                  oldChunk.mesh.material.forEach((mat) => {
+                    (mat as MaterialWithTextures).dispose();
+                  });
+                } else {
+                  (oldChunk.mesh.material as MaterialWithTextures).dispose();
+                }
+              }
+              if (oldChunk.mesh.geometry) {
+                oldChunk.mesh.geometry.dispose();
+              }
             }
           }
         }

@@ -113,7 +113,11 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     window.addEventListener("touchend", onTouchEnd);
 
     // Motion
+<<<<<<< HEAD
     let accelHandler: { remove: () => void } | undefined;
+=======
+    let accelHandler: { remove: () => Promise<void> } | undefined;
+>>>>>>> origin/main
     const setupMotion = async () => {
       try {
         accelHandler = await Motion.addListener("accel", (event) => {
@@ -133,7 +137,11 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
-      if (accelHandler) accelHandler.remove();
+      if (accelHandler) {
+        accelHandler
+          .remove()
+          .catch((e) => console.error("Failed to remove accel listener", e));
+      }
     };
   }, []);
 

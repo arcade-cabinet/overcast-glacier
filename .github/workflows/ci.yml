@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main, release/1.0]
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target platform (native or web)'
+        required: false
+        default: 'native'
+        type: choice
+        options:
+          - native
+          - web
 
 permissions:
   contents: read
@@ -42,12 +51,14 @@ jobs:
           version: 10
 
       - name: Install Root Dependencies (for Biome)
-        working-directory: .
-        run: pnpm install --frozen-lockfile
+        run: |
+          cd ../..
+          pnpm install --frozen-lockfile
 
       - name: Lint Native App
-        working-directory: .
-        run: pnpm exec biome check apps/native
+        run: |
+          cd ../..
+          pnpm exec biome check apps/native
 
   # Web App Checks (Deprecated/Maintenance only)
   # Only runs if changes detected in web-specific files AND not just native files

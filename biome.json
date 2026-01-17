@@ -7,10 +7,10 @@
       "!.astro",
       "!node_modules",
       "!pnpm-lock.yaml",
-      "!**/android",
-      "!**/playwright-report",
-      "!**/test-results",
-      "!**/e2e-screenshots"
+      "!android",
+      "!playwright-report",
+      "!test-results",
+      "!e2e-screenshots"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
