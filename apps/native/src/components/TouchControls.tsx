@@ -183,8 +183,10 @@ export function TouchControls({
       if (
         dy > INPUT_CONFIG.swipeThreshold &&
         Math.abs(vy) > INPUT_CONFIG.swipeVelocityThreshold
-      ) {
-        inputRef.current.brake = true;
+        // Reset jump flag after one frame
+        /* setTimeout(() => {
+          inputRef.current.jump = false;
+        }, 50); */
         triggerHaptic("light");
         onInput?.(inputRef.current);
 
