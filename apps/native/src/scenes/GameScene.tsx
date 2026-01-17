@@ -132,7 +132,7 @@ export const GameScene: React.FC = () => {
               { diameter: 1 },
               scene,
             );
-            const mat = new StandardMaterial("snowmanMat", scene);
+            const mat = new StandardMaterial(`snowmanMat_${chunkIndex}_${i}`, scene);
             mat.diffuseColor = Color3.White();
             mesh.material = mat;
           } else if (type === "polar_bear") {
