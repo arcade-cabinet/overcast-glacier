@@ -154,7 +154,9 @@ export class AudioManager {
         await sound.playAsync();
       }
     } catch (error) {
-      console.warn(`Failed to play music ${type}:`, error);
+    } catch (error) {
+      console.warn("Could not create sound object:", error);
+      return null;
     }
   }
 
