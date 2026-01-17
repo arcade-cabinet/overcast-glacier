@@ -22,9 +22,9 @@ export const getBiomeAt = (z: number): BiomeType => {
   // Use noise to determine biome transitions
   const n = noise2D(z * 0.001, 0);
 
-  if (n > GAME_CONFIG.biomes.ice_cave.prob) return "ice_cave";
-  if (n > GAME_CONFIG.biomes.frozen_rink.prob) return "frozen_rink";
-  if (n < GAME_CONFIG.biomes.cocoa_valley.prob) return "cocoa_valley";
+  if (n > GAME_CONFIG.biomes.ice_cave.noiseThreshold) return "ice_cave";
+  if (n > GAME_CONFIG.biomes.frozen_rink.noiseThreshold) return "frozen_rink";
+  if (n < GAME_CONFIG.biomes.cocoa_valley.noiseThreshold) return "cocoa_valley";
 
   return "open_slope";
 };

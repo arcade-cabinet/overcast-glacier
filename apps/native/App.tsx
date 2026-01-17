@@ -16,7 +16,12 @@ const MainMenu: React.FC = () => {
   const highScore = useGameStore((state) => state.highScore);
 
   const handleStart = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (err) {
+      // Log error but continue with state transition
+      console.warn("Haptics failed:", err);
+    }
     setGameState("playing");
   };
 
@@ -47,7 +52,12 @@ const GameHUD: React.FC = () => {
   const setGameState = useGameStore((state) => state.setGameState);
 
   const handlePause = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (err) {
+      // Log error but continue with state transition
+      console.warn("Haptics failed:", err);
+    }
     setGameState("paused");
   };
 

@@ -12,4 +12,9 @@ if (rootElement) {
   );
 } else {
   console.error('Root element with id "root" not found in document.');
+  if (import.meta.env.DEV) {
+    throw new Error(
+      'Root element with id "root" not found in document. Cannot mount application.',
+    );
+  }
 }

@@ -2,7 +2,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { SnowEmperor } from "../components/SnowEmperor";
-import { world } from "../ecs/world";
+import { type Entity, world } from "../ecs/world";
 import {
   CHUNK_SIZE,
   getBiomeAt,
@@ -69,13 +69,6 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
     const chunkSeed = Math.floor(Math.abs(zOffset));
     const chunkRNG = new RNG(chunkSeed);
 
-    interface Entity {
-      tag: string;
-      enemyType?: string;
-      position: { x: number; y: number; z: number };
-      velocity: { x: number; y: number; z: number };
-      health?: number;
-    }
     const entities: Entity[] = [];
     const enemyCount = biome === "summit" ? 0 : chunkRNG.rangeInt(2, 6);
 

@@ -51,7 +51,7 @@ export const AISystem = () => {
   // Yuka Manager
   const entityManager = new YUKA.EntityManager();
   // Map ECS Entity -> Yuka Vehicle
-  const entityMap = new Map<number, EnemyVehicle>();
+  const entityMap = new Map<Entity, EnemyVehicle>();
   // Player proxy in Yuka world (so enemies can seek it)
   const playerGameEntity = new YUKA.GameEntity();
   entityManager.add(playerGameEntity);

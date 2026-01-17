@@ -10,12 +10,15 @@ export const GAME_CONFIG = {
     cameraOffset: { x: 0, y: 5, z: 10 },
   },
   biomes: {
-    open_slope: { color: "#F0F9FF", enemyDensity: 2, prob: 0.4 },
-    ice_cave: { color: "#7DD3FC", enemyDensity: 4, prob: 0.6 },
-    frozen_rink: { color: "#E0F2FE", enemyDensity: 3, prob: 0.3 },
-    cocoa_valley: { color: "#BAE6FD", enemyDensity: 2, prob: -0.5 },
-    summit: { color: "#F8FAFC", enemyDensity: 0, prob: 2.0 }, // Special case
-  } as Record<BiomeType, { color: string; enemyDensity: number; prob: number }>,
+    open_slope: { color: "#F0F9FF", enemyDensity: 2, noiseThreshold: 0.4 },
+    ice_cave: { color: "#7DD3FC", enemyDensity: 4, noiseThreshold: 0.6 },
+    frozen_rink: { color: "#E0F2FE", enemyDensity: 3, noiseThreshold: 0.3 },
+    cocoa_valley: { color: "#BAE6FD", enemyDensity: 2, noiseThreshold: -0.5 },
+    summit: { color: "#F8FAFC", enemyDensity: 0, noiseThreshold: 2.0 }, // Special case
+  } as Record<
+    BiomeType,
+    { color: string; enemyDensity: number; noiseThreshold: number }
+  >,
   enemies: {
     snowman: {
       speed: 5,
