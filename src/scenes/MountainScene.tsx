@@ -9,7 +9,7 @@ import {
   getBiomeColor,
   getHeightAt,
 } from "../lib/procedural";
-import { RNG } from "../lib/rng"; // Import RNG
+import { RNG } from "../lib/rng"; // Import RNG class
 import type { EnemyType } from "../types";
 
 const BOSS_SPAWN_Z = 1000;
