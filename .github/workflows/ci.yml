@@ -15,7 +15,21 @@ jobs:
   native-checks:
     name: Native App (Typecheck & Lint)
     runs-on: ubuntu-latest
-    if: inputs.target != 'web' # Always run unless explicitly skipped (default behavior)
+on:
+  push:
+    branches: [main, release/1.0]
+  pull_request:
+    branches: [main, release/1.0]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target platform (native or web)'
+        required: false
+        default: 'native'
+        type: choice
+        options:
+          - native
+          - web
     defaults:
       run:
         working-directory: ./apps/native
