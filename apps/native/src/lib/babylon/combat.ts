@@ -335,7 +335,55 @@ export class CombatManager {
     const maxFrames = 30;
     const intensity = this.config.cameraShakeIntensity;
 
-    const shakeObserver = this.scene.onBeforeRenderObservable.add(() => {
+  private cameraShake(): void {
+    if (!this.camera) return;
+
+    // If a shake is already in progress, stop it before starting a new one.
+    if (this.shakeObserver) {
+      this.scene.onBeforeRenderObservable.remove(this.shakeObserver);
+      this.shakeObserver = null;
+      // It might also be good to reset camera properties here if needed.
+    }
+
+    // Pull camera back
+    const originalRadius = this.originalCameraRadius;
+    this.camera.radius = originalRadius * 1.3;
+
+    // Shake
+    let frames = 0;
+    const maxFrames = 30;
+    const intensity = this.config.cameraShakeIntensity;
+
+    this.shakeObserver = this.scene.onBeforeRenderObservable.add(() => {
+      if (!this.camera) return;
+
+      frames++;
+
+      if (frames < maxFrames) {
+        // Apply random offset
+        const decay = 1 - frames / maxFrames;
+        this.camera.alpha += (GameRNG.next() - 0.5) * intensity * decay * 0.1;
+        this.camera.beta += (GameRNG.next() - 0.5) * intensity * decay * 0.05;
+      } else {
+        // Reset
+        this.camera.radius = originalRadius;
+        this.scene.onBeforeRenderObservable.remove(this.shakeObserver);
+        this.shakeObserver = null;
+      }
+    });
+
+    // Ensure radius returns even if observer fails
+    setTimeout(() => {
+      if (this.camera) {
+        this.camera.radius = originalRadius;
+      }
+      // If the observer is still here after timeout, something is wrong, so we remove it.
+      if (this.shakeObserver) {
+        this.scene.onBeforeRenderObservable.remove(this.shakeObserver);
+        this.shakeObserver = null;
+      }
+    }, 1000);
+  }
       if (!this.camera) return;
 
       frames++;
