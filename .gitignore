@@ -146,3 +146,5 @@ gha-creds-*.json
 e2e-screenshots/
 playwright-report/
 test-results/
+gh_2.40.0_linux_amd64/
+gh.tar.gz
