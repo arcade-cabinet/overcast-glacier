@@ -1,4 +1,6 @@
-import React from "react";
+import * as Haptics from "expo-haptics";
+import { StatusBar } from "expo-status-bar";
+import type React from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -6,27 +8,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
-import * as Haptics from "expo-haptics";
-
+import { GameScene } from "./src/scenes/GameScene";
 import { useGameStore } from "./src/stores/useGameStore";
-// import { GameScene } from "./src/scenes/GameScene";
-
-// Temporarily use a placeholder until Babylon.js is fully integrated
-const GameScenePlaceholder: React.FC = () => (
-  <View style={styles.scenePlaceholder}>
-    <Text style={styles.placeholderText}>
-      Babylon.js Scene Loading...
-    </Text>
-  </View>
-);
 
 const MainMenu: React.FC = () => {
   const setGameState = useGameStore((state) => state.setGameState);
   const highScore = useGameStore((state) => state.highScore);
 
   const handleStart = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (err) {
+      // Log error but continue with state transition
+      console.warn("Haptics failed:", err);
+    }
     setGameState("playing");
   };
 
@@ -35,9 +30,7 @@ const MainMenu: React.FC = () => {
       <Text style={styles.title}>OVERCAST:</Text>
       <Text style={styles.subtitle}>GLACIERS!</Text>
 
-      <Text style={styles.tagline}>
-        A kung-fu kitten vs. the digital frost
-      </Text>
+      <Text style={styles.tagline}>A kung-fu kitten vs. the digital frost</Text>
 
       <TouchableOpacity style={styles.startButton} onPress={handleStart}>
         <Text style={styles.startButtonText}>ENTER SIMULATION</Text>
@@ -59,7 +52,12 @@ const GameHUD: React.FC = () => {
   const setGameState = useGameStore((state) => state.setGameState);
 
   const handlePause = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (err) {
+      // Log error but continue with state transition
+      console.warn("Haptics failed:", err);
+    }
     setGameState("paused");
   };
 
@@ -78,9 +76,7 @@ const GameHUD: React.FC = () => {
         <View style={styles.warmthContainer}>
           <Text style={styles.warmthLabel}>WARMTH</Text>
           <View style={styles.warmthBar}>
-            <View
-              style={[styles.warmthFill, { width: `${warmth}%` }]}
-            />
+            <View style={[styles.warmthFill, { width: `${warmth}%` }]} />
           </View>
         </View>
       </View>
@@ -155,7 +151,7 @@ export default function App() {
       <StatusBar style="light" />
 
       {/* Game Scene - always rendered */}
-      <GameScenePlaceholder />
+      <GameScene />
 
       {/* UI Overlays based on game state */}
       {(gameState === "initial" || gameState === "menu") && <MainMenu />}
@@ -170,19 +166,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0F172A",
-  },
-
-  // Scene placeholder
-  scenePlaceholder: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#0F172A",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  placeholderText: {
-    color: "#7DD3FC",
-    fontSize: 18,
-    fontWeight: "600",
   },
 
   // Menu styles

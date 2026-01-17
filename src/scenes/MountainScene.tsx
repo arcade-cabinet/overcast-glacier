@@ -2,14 +2,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { SnowEmperor } from "../components/SnowEmperor";
-import { world } from "../ecs/world";
+import { type Entity, world } from "../ecs/world";
 import {
   CHUNK_SIZE,
   getBiomeAt,
   getBiomeColor,
   getHeightAt,
 } from "../lib/procedural";
-import { GameRNG } from "../lib/rng"; // Import RNG
+import { RNG } from "../lib/rng"; // Import RNG class
 import type { EnemyType } from "../types";
 
 const BOSS_SPAWN_Z = 1000;
@@ -67,9 +67,9 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
     // This allows re-visiting chunks (if we did that) to have same enemies,
     // and ensures consistency across renders if useEffect re-runs
     const chunkSeed = Math.floor(Math.abs(zOffset));
-    const chunkRNG = new (GameRNG.constructor as any)(chunkSeed);
+    const chunkRNG = new RNG(chunkSeed);
 
-    const entities: any[] = [];
+    const entities: Entity[] = [];
     const enemyCount = biome === "summit" ? 0 : chunkRNG.rangeInt(2, 6);
 
     for (let i = 0; i < enemyCount; i++) {

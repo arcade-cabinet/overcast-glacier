@@ -1,7 +1,9 @@
 import { createNoise2D } from "simplex-noise";
 import { GAME_CONFIG } from "../config/gameConfig";
+import { TerrainRNG } from "./rng";
 
-const noise2D = createNoise2D();
+// Use seeded RNG for deterministic noise
+const noise2D = createNoise2D(() => TerrainRNG.next());
 
 export const CHUNK_SIZE = 100;
 

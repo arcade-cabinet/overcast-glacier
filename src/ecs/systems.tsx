@@ -51,7 +51,7 @@ export const AISystem = () => {
   // Yuka Manager
   const entityManager = new YUKA.EntityManager();
   // Map ECS Entity -> Yuka Vehicle
-  const entityMap = new Map<any, EnemyVehicle>();
+  const entityMap = new Map<Entity, EnemyVehicle>();
   // Player proxy in Yuka world (so enemies can seek it)
   const playerGameEntity = new YUKA.GameEntity();
   entityManager.add(playerGameEntity);
@@ -73,7 +73,7 @@ export const AISystem = () => {
 
     // Sync Enemies
     const enemies = world.with("tag", "enemyType", "position", "velocity");
-    const activeEntities = new Set<any>();
+    const activeEntities = new Set<Entity>();
 
     for (const enemy of enemies) {
       activeEntities.add(enemy);
