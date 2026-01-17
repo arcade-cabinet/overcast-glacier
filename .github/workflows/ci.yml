@@ -24,9 +24,6 @@ jobs:
   native-checks:
     name: Native App (Typecheck & Lint)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/native
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,7 +40,6 @@ jobs:
           cache: "pnpm"
 
       - name: Install Root Dependencies
-        working-directory: .
         run: pnpm install --frozen-lockfile
 
       - name: Install Native Dependencies
@@ -55,7 +51,6 @@ jobs:
         run: pnpm exec tsc --noEmit
 
       - name: Lint Native App
-        working-directory: .
         run: pnpm exec biome check apps/native
 
   # Web App Checks (Deprecated/Maintenance only)
