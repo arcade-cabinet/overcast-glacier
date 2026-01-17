@@ -113,7 +113,7 @@ export const Player = ({ enemiesRef, collectiblesRef }: PlayerProps) => {
     window.addEventListener("touchend", onTouchEnd);
 
     // Motion
-    let accelHandler: any;
+    let accelHandler: { remove: () => void } | undefined;
     const setupMotion = async () => {
       try {
         accelHandler = await Motion.addListener("accel", (event) => {

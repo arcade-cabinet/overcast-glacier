@@ -29,6 +29,15 @@ interface GameStore {
   gameState: GameState;
   playerForm: PlayerForm;
 
+  // Movement and gameplay
+  velocity: number;
+  combo: number;
+  comboMultiplier: number;
+  currentBiome: string;
+
+  // Player position (for syncing with Babylon)
+  playerPosition: { x: number; y: number; z: number };
+
   // Boss State
   bossHealth: number;
   bossPhase: number;
@@ -56,6 +65,20 @@ interface GameStore {
   decreaseWarmth: (amount: number) => void;
   increaseWarmth: (amount: number) => void;
 
+  // Movement actions
+  setVelocity: (velocity: number) => void;
+  setPlayerPosition: (pos: { x: number; y: number; z: number }) => void;
+  setBiome: (biome: string) => void;
+
+  // Combo actions
+  incrementCombo: () => void;
+  resetCombo: () => void;
+
+  // Game flow
+  pauseGame: () => void;
+  resumeGame: () => void;
+  startGame: () => void;
+
   damageBoss: (amount: number) => void;
   setBossPhase: (phase: number) => void;
 
@@ -75,6 +98,13 @@ const initialState = {
   maxWarmth: 100,
   gameState: "initial" as GameState,
   playerForm: "kitten" as PlayerForm,
+
+  // Movement and gameplay
+  velocity: 0,
+  combo: 0,
+  comboMultiplier: 1.0,
+  currentBiome: "open_slope",
+  playerPosition: { x: 0, y: 1, z: 0 },
 
   bossHealth: 100,
   bossPhase: 1,
@@ -131,6 +161,35 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({
           warmth: Math.min(state.maxWarmth, state.warmth + amount),
         })),
+
+      // Movement actions
+      setVelocity: (velocity) => set({ velocity }),
+      setPlayerPosition: (pos) => set({ playerPosition: pos }),
+      setBiome: (biome) => set({ currentBiome: biome }),
+
+      // Combo actions
+      incrementCombo: () =>
+        set((state) => {
+          const newCombo = state.combo + 1;
+          // Multiplier increases with combo: 1.0, 1.5, 2.0, 2.5, 3.0 (max)
+          const newMultiplier = Math.min(
+            3.0,
+            1.0 + Math.floor(newCombo / 5) * 0.5,
+          );
+          return { combo: newCombo, comboMultiplier: newMultiplier };
+        }),
+      resetCombo: () => set({ combo: 0, comboMultiplier: 1.0 }),
+
+      // Game flow
+      pauseGame: () =>
+        set((state) =>
+          state.gameState === "playing" ? { gameState: "paused" } : {},
+        ),
+      resumeGame: () =>
+        set((state) =>
+          state.gameState === "paused" ? { gameState: "playing" } : {},
+        ),
+      startGame: () => set({ gameState: "playing", velocity: 15 }),
 
       addPhoto: (type) =>
         set((state) => {
@@ -205,6 +264,6 @@ export const useGameStore = create<GameStore>()(
         highScore: state.highScore,
         stats: state.stats,
       }),
-    }
-  )
+    },
+  ),
 );

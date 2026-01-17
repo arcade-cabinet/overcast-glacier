@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type * as THREE from "three";
 import { GameRNG } from "../lib/rng";
 import { useGameStore } from "../stores/useGameStore";
@@ -20,7 +20,10 @@ export const SnowEmperor = ({
 
   // Floating shards logic
   const shardCount = 12;
-  const shards = useMemo(() => Array.from({ length: shardCount }), []);
+  const shards = useMemo(
+    () => Array.from({ length: shardCount }, (_, i) => `shard-${i}`),
+    [],
+  );
 
   useFrame((state) => {
     if (!group.current) return;
@@ -92,8 +95,8 @@ export const SnowEmperor = ({
       </mesh>
 
       {/* Floating Shards (Attack telegraphs) */}
-      {shards.map((_, i) => (
-        <Shard key={i} index={i} total={shardCount} phase={bossPhase} />
+      {shards.map((key, i) => (
+        <Shard key={key} index={i} total={shardCount} phase={bossPhase} />
       ))}
     </group>
   );

@@ -1,7 +1,6 @@
 export const Loader = () => {
   return (
-    <div
-      role="status"
+    <output
       aria-label="Loading simulation"
       className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-primary text-accent-ice"
     >
@@ -9,6 +8,6 @@ export const Loader = () => {
       <div className="font-heading text-xl tracking-widest animate-pulse">
         LOADING SIMULATION...
       </div>
-    </div>
+    </output>
   );
 };
