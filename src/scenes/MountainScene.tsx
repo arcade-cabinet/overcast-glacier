@@ -9,7 +9,7 @@ import {
   getBiomeColor,
   getHeightAt,
 } from "../lib/procedural";
-import { GameRNG } from "../lib/rng"; // Import RNG
+import { RNG } from "../lib/rng"; // Import RNG
 import type { EnemyType } from "../types";
 
 const BOSS_SPAWN_Z = 1000;
@@ -67,9 +67,16 @@ const TerrainChunk = ({ zOffset }: { zOffset: number }) => {
     // This allows re-visiting chunks (if we did that) to have same enemies,
     // and ensures consistency across renders if useEffect re-runs
     const chunkSeed = Math.floor(Math.abs(zOffset));
-    const chunkRNG = new (GameRNG.constructor as any)(chunkSeed);
+    const chunkRNG = new RNG(chunkSeed);
 
-    const entities: any[] = [];
+    interface Entity {
+      tag: string;
+      enemyType?: string;
+      position: { x: number; y: number; z: number };
+      velocity: { x: number; y: number; z: number };
+      health?: number;
+    }
+    const entities: Entity[] = [];
     const enemyCount = biome === "summit" ? 0 : chunkRNG.rangeInt(2, 6);
 
     for (let i = 0; i < enemyCount; i++) {

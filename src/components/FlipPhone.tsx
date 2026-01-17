@@ -24,9 +24,8 @@ export const FlipPhone = ({ onClose }: { onClose: () => void }) => {
         {/* Message List */}
         <div className="flex-1 overflow-y-auto space-y-3 font-body text-green-400 text-sm scrollbar-thin scrollbar-thumb-gray-700">
           {messages.map((msg, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: Static
             <div
-              key={i}
+              key={`msg-${i}-${msg.sender}-${msg.text.substring(0, 20)}`}
               className="bg-green-900/20 p-2 rounded-lg border border-green-500/20"
             >
               <span className="font-bold text-green-300 block text-xs mb-1">

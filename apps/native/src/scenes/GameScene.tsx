@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useRef } from "react";
-import { View, StyleSheet } from "react-native";
 import {
-  Scene,
   ArcRotateCamera,
-  HemisphericLight,
-  Vector3,
-  MeshBuilder,
-  StandardMaterial,
   Color3,
   Color4,
+  HemisphericLight,
+  MeshBuilder,
+  Scene,
+  StandardMaterial,
+  Vector3,
 } from "@babylonjs/core";
 import { EngineView, useEngine } from "@babylonjs/react-native";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { StyleSheet, View } from "react-native";
 
 import { TerrainRNG } from "../lib/rng";
 import { useGameStore } from "../stores/useGameStore";
@@ -41,7 +42,7 @@ export const GameScene: React.FC = () => {
   const chunksRef = useRef<TerrainChunk[]>([]);
   const playerZRef = useRef(0);
 
-  const gameState = useGameStore((state) => state.gameState);
+  const _gameState = useGameStore((state) => state.gameState);
   const setGameState = useGameStore((state) => state.setGameState);
 
   // Determine biome based on z position using deterministic RNG
@@ -78,7 +79,7 @@ export const GameScene: React.FC = () => {
           subdivisions: 32,
           updatable: true,
         },
-        scene
+        scene,
       );
 
       // Apply height map
@@ -106,7 +107,7 @@ export const GameScene: React.FC = () => {
 
       return { mesh: ground, zPosition, biome };
     },
-    [getBiomeForChunk, getTerrainHeight]
+    [getBiomeForChunk, getTerrainHeight],
   );
 
   // Initialize scene when engine is available
@@ -126,17 +127,13 @@ export const GameScene: React.FC = () => {
       Math.PI / 3,
       30,
       Vector3.Zero(),
-      scene
+      scene,
     );
     camera.lowerBetaLimit = Math.PI / 4;
     camera.upperBetaLimit = Math.PI / 2.5;
 
     // Hemispheric light for soft arctic lighting
-    const light = new HemisphericLight(
-      "light",
-      new Vector3(0, 1, -0.5),
-      scene
-    );
+    const light = new HemisphericLight("light", new Vector3(0, 1, -0.5), scene);
     light.intensity = 0.8;
     light.diffuse = new Color3(0.49, 0.83, 0.99); // Ice blue tint
     light.groundColor = new Color3(0.06, 0.09, 0.16); // Dark blue ground
@@ -148,11 +145,7 @@ export const GameScene: React.FC = () => {
     }
 
     // Create player placeholder (kitten)
-    const player = MeshBuilder.CreateSphere(
-      "player",
-      { diameter: 1 },
-      scene
-    );
+    const player = MeshBuilder.CreateSphere("player", { diameter: 1 }, scene);
     player.position.y = 2;
     player.position.z = 0;
 
@@ -174,9 +167,7 @@ export const GameScene: React.FC = () => {
         camera.target.z = player.position.z;
 
         // Check if we need to generate new chunks
-        const currentChunkIndex = Math.floor(
-          player.position.z / CHUNK_SIZE
-        );
+        const currentChunkIndex = Math.floor(player.position.z / CHUNK_SIZE);
         const lastChunk = chunksRef.current[chunksRef.current.length - 1];
         const lastChunkIndex = Math.floor(lastChunk.zPosition / CHUNK_SIZE);
 

@@ -1,4 +1,6 @@
-import React from "react";
+import * as Haptics from "expo-haptics";
+import { StatusBar } from "expo-status-bar";
+import type React from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -6,18 +8,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
-import * as Haptics from "expo-haptics";
 
 import { useGameStore } from "./src/stores/useGameStore";
+
 // import { GameScene } from "./src/scenes/GameScene";
 
 // Temporarily use a placeholder until Babylon.js is fully integrated
 const GameScenePlaceholder: React.FC = () => (
   <View style={styles.scenePlaceholder}>
-    <Text style={styles.placeholderText}>
-      Babylon.js Scene Loading...
-    </Text>
+    <Text style={styles.placeholderText}>Babylon.js Scene Loading...</Text>
   </View>
 );
 
@@ -35,9 +34,7 @@ const MainMenu: React.FC = () => {
       <Text style={styles.title}>OVERCAST:</Text>
       <Text style={styles.subtitle}>GLACIERS!</Text>
 
-      <Text style={styles.tagline}>
-        A kung-fu kitten vs. the digital frost
-      </Text>
+      <Text style={styles.tagline}>A kung-fu kitten vs. the digital frost</Text>
 
       <TouchableOpacity style={styles.startButton} onPress={handleStart}>
         <Text style={styles.startButtonText}>ENTER SIMULATION</Text>
@@ -78,9 +75,7 @@ const GameHUD: React.FC = () => {
         <View style={styles.warmthContainer}>
           <Text style={styles.warmthLabel}>WARMTH</Text>
           <View style={styles.warmthBar}>
-            <View
-              style={[styles.warmthFill, { width: `${warmth}%` }]}
-            />
+            <View style={[styles.warmthFill, { width: `${warmth}%` }]} />
           </View>
         </View>
       </View>

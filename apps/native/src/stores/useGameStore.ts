@@ -205,6 +205,6 @@ export const useGameStore = create<GameStore>()(
         highScore: state.highScore,
         stats: state.stats,
       }),
-    }
-  )
+    },
+  ),
 );
