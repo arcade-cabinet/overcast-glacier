@@ -73,7 +73,7 @@ export const AISystem = () => {
 
     // Sync Enemies
     const enemies = world.with("tag", "enemyType", "position", "velocity");
-    const activeEntities = new Set<number>();
+    const activeEntities = new Set<Entity>();
 
     for (const enemy of enemies) {
       activeEntities.add(enemy);
