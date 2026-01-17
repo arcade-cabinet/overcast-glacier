@@ -31,27 +31,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      # Using npm for native as currently configured
-      - name: Install Native Dependencies
-        run: npm install
-
-      - name: TypeScript Check (Native)
-        run: npx tsc --noEmit
-
-      # Using pnpm for root/biome as currently configured
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - name: Install Root Dependencies (for Biome)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install Root Dependencies
         working-directory: .
         run: pnpm install --frozen-lockfile
+
+      - name: Install Native Dependencies
+        working-directory: ./apps/native
+        run: pnpm install
+
+      - name: TypeScript Check (Native)
+        working-directory: ./apps/native
+        run: pnpm exec tsc --noEmit
 
       - name: Lint Native App
         working-directory: .

@@ -281,16 +281,13 @@ export const GameScene: React.FC = () => {
                         if (mat.metalnessMap) mat.metalnessMap.dispose();
                       });
                     } else {
-                      entity.mesh.material.dispose();
+                      const mat = entity.mesh.material as any;
+                      mat.dispose();
                       // Dispose textures if any
-                      if (entity.mesh.material.map)
-                        entity.mesh.material.map.dispose();
-                      if (entity.mesh.material.normalMap)
-                        entity.mesh.material.normalMap.dispose();
-                      if (entity.mesh.material.roughnessMap)
-                        entity.mesh.material.roughnessMap.dispose();
-                      if (entity.mesh.material.metalnessMap)
-                        entity.mesh.material.metalnessMap.dispose();
+                      if (mat.map) mat.map.dispose();
+                      if (mat.normalMap) mat.normalMap.dispose();
+                      if (mat.roughnessMap) mat.roughnessMap.dispose();
+                      if (mat.metalnessMap) mat.metalnessMap.dispose();
                     }
                   }
                   if (entity.mesh.geometry) {
@@ -302,11 +299,12 @@ export const GameScene: React.FC = () => {
               // Dispose chunk mesh materials and geometry
               if (oldChunk.mesh.material) {
                 if (Array.isArray(oldChunk.mesh.material)) {
-                  oldChunk.mesh.material.forEach((mat) => {
+                  oldChunk.mesh.material.forEach((mat: any) => {
                     mat.dispose();
                   });
                 } else {
-                  oldChunk.mesh.material.dispose();
+                  const mat = oldChunk.mesh.material as any;
+                  mat.dispose();
                 }
               }
               if (oldChunk.mesh.geometry) {
