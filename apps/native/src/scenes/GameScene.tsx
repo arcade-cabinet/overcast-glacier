@@ -269,11 +269,49 @@ export const GameScene: React.FC = () => {
               for (const entity of oldChunk.entities) {
                 // Dispose mesh if it exists
                 if (entity.mesh) {
-                  entity.mesh.dispose(false, true);
+                  // Properly dispose materials and textures
+                  if (entity.mesh.material) {
+                    if (Array.isArray(entity.mesh.material)) {
+                      entity.mesh.material.forEach((mat) => {
+                        mat.dispose();
+                        // Dispose textures if any
+                        if (mat.map) mat.map.dispose();
+                        if (mat.normalMap) mat.normalMap.dispose();
+                        if (mat.roughnessMap) mat.roughnessMap.dispose();
+                        if (mat.metalnessMap) mat.metalnessMap.dispose();
+                      });
+                    } else {
+                      entity.mesh.material.dispose();
+                      // Dispose textures if any
+                      if (entity.mesh.material.map)
+                        entity.mesh.material.map.dispose();
+                      if (entity.mesh.material.normalMap)
+                        entity.mesh.material.normalMap.dispose();
+                      if (entity.mesh.material.roughnessMap)
+                        entity.mesh.material.roughnessMap.dispose();
+                      if (entity.mesh.material.metalnessMap)
+                        entity.mesh.material.metalnessMap.dispose();
+                    }
+                  }
+                  if (entity.mesh.geometry) {
+                    entity.mesh.geometry.dispose();
+                  }
                 }
                 world.remove(entity);
               }
-              oldChunk.mesh.dispose(false, true);
+              // Dispose chunk mesh materials and geometry
+              if (oldChunk.mesh.material) {
+                if (Array.isArray(oldChunk.mesh.material)) {
+                  oldChunk.mesh.material.forEach((mat) => {
+                    mat.dispose();
+                  });
+                } else {
+                  oldChunk.mesh.material.dispose();
+                }
+              }
+              if (oldChunk.mesh.geometry) {
+                oldChunk.mesh.geometry.dispose();
+              }
             }
           }
         }
