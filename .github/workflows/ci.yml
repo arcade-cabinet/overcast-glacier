@@ -42,14 +42,12 @@ jobs:
           version: 10
 
       - name: Install Root Dependencies (for Biome)
-        run: |
-          cd ../..
-          pnpm install --frozen-lockfile
+        working-directory: .
+        run: pnpm install --frozen-lockfile
 
       - name: Lint Native App
-        run: |
-          cd ../..
-          pnpm exec biome check apps/native
+        working-directory: .
+        run: pnpm exec biome check apps/native
 
   # Web App Checks (Deprecated/Maintenance only)
   # Only runs if changes detected in web-specific files AND not just native files
