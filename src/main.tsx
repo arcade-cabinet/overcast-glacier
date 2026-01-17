@@ -10,4 +10,6 @@ if (rootElement) {
       <App />
     </React.StrictMode>,
   );
+} else {
+  console.error("Root element not found. Ensure index.html contains an element with id='root'.");
 }
