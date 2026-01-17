@@ -10,8 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@babylonjs/addons": "^8.46.2",
     "@babylonjs/core": "^8.46.2",
     "@babylonjs/loaders": "^8.46.2",
+    "@babylonjs/materials": "^8.46.2",
     "@babylonjs/react-native": "^1.9.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "expo": "~54.0.31",
