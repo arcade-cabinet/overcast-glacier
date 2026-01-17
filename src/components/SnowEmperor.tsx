@@ -22,7 +22,7 @@ export const SnowEmperor = ({
   const shardCount = 12;
   const shards = useMemo(
     () => Array.from({ length: shardCount }, (_, i) => `shard-${i}`),
-    [],
+    [shardCount],
   );
 
   useFrame((state) => {
