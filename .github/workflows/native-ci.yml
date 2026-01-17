@@ -1,0 +1,55 @@
+name: Native CI
+
+on:
+  push:
+    branches: [main, release/1.0]
+    paths:
+      - 'apps/native/**'
+      - '.github/workflows/native-ci.yml'
+  pull_request:
+    branches: [main, release/1.0]
+    paths:
+      - 'apps/native/**'
+      - '.github/workflows/native-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/native
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run TypeScript Check
+        run: npx tsc --noEmit
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Biome on apps/native
+        run: pnpm exec biome check apps/native
