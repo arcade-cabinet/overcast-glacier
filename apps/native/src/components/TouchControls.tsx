@@ -199,10 +199,9 @@ export function TouchControls({
       if (
         Math.abs(dx) > INPUT_CONFIG.swipeThreshold &&
         Math.abs(vx) > INPUT_CONFIG.swipeVelocityThreshold
-      ) {
-        inputRef.current.kick = true;
-        inputRef.current.horizontal = dx > 0 ? 1 : -1;
-        triggerHaptic("heavy");
+        /* setTimeout(() => {
+          inputRef.current.brake = false;
+        }, 50); */
         onInput?.(inputRef.current);
 
         setTimeout(() => {
