@@ -237,9 +237,9 @@ export function TouchControls({
 
       onPanResponderGrant: (event: GestureResponderEvent) => {
         const { locationX, locationY } = event.nativeEvent;
-        touchStartRef.current = { x: locationX, y: locationY };
-
-        // Check for double tap
+    /* setTimeout(() => {
+      inputRef.current.kick = false;
+    }, 50); */
         const now = Date.now();
         if (now - lastTapRef.current < INPUT_CONFIG.doubleTapThreshold) {
           handleDoubleTap();
