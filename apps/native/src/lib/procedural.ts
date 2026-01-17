@@ -20,6 +20,7 @@ export const getBiomeAt = (z: number): BiomeType => {
   if (absZ > GAME_CONFIG.boss.spawnZ - 50) return "summit";
 
   // Use noise to determine biome transitions
+  // Use noise to determine biome transitions
   const n = noise2D(z * 0.001, 0);
 
   if (n > GAME_CONFIG.biomes.ice_cave.prob) return "ice_cave";
