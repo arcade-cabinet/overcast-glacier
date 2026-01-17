@@ -220,10 +220,9 @@ export function TouchControls({
     if (disabled || gameState !== "playing") return;
 
     // Double tap triggers kick/attack
-    inputRef.current.kick = true;
-    triggerHaptic("heavy");
-    onInput?.(inputRef.current);
-
+        /* setTimeout(() => {
+          inputRef.current.kick = false;
+        }, 50); */
     setTimeout(() => {
       inputRef.current.kick = false;
     }, 50);
