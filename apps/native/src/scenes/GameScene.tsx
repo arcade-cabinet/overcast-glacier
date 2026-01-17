@@ -42,7 +42,6 @@ export const GameScene: React.FC = () => {
   const chunksRef = useRef<TerrainChunk[]>([]);
   const playerZRef = useRef(0);
 
-  const _gameState = useGameStore((state) => state.gameState);
   const setGameState = useGameStore((state) => state.setGameState);
 
   // Determine biome based on z position using deterministic RNG
