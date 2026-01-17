@@ -149,12 +149,13 @@ export const GameScene: React.FC = () => {
 
           mesh.position = new Vector3(ex, ey + 1, ez);
 
+          const radius = GAME_CONFIG.enemies[type].radius;
           const entity = world.add({
             tag: "enemy",
             position: mesh.position, // Link position
             velocity: new Vector3(0, 0, 0),
             gravity: true,
-            radius: 1.0,
+            radius,
             enemyType: type,
             mesh: mesh,
           });
