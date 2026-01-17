@@ -7,6 +7,7 @@ import {
   MeshBuilder,
   Scene,
   StandardMaterial,
+  type Texture,
   Vector3,
 } from "@babylonjs/core";
 import { EngineView, useEngine } from "@babylonjs/react-native";
@@ -24,6 +25,15 @@ import {
 import { RNG } from "../lib/rng";
 import { useGameStore } from "../stores/useGameStore";
 import type { EnemyType } from "../types";
+
+// Type for materials that may have texture properties
+interface MaterialWithTextures {
+  dispose: () => void;
+  map?: Texture;
+  normalMap?: Texture;
+  roughnessMap?: Texture;
+  metalnessMap?: Texture;
+}
 
 const VISIBLE_CHUNKS = 5;
 
@@ -273,15 +283,19 @@ export const GameScene: React.FC = () => {
                   if (entity.mesh.material) {
                     if (Array.isArray(entity.mesh.material)) {
                       entity.mesh.material.forEach((mat) => {
-                        mat.dispose();
+                        const matWithTextures = mat as MaterialWithTextures;
+                        matWithTextures.dispose();
                         // Dispose textures if any
-                        if (mat.map) mat.map.dispose();
-                        if (mat.normalMap) mat.normalMap.dispose();
-                        if (mat.roughnessMap) mat.roughnessMap.dispose();
-                        if (mat.metalnessMap) mat.metalnessMap.dispose();
+                        if (matWithTextures.map) matWithTextures.map.dispose();
+                        if (matWithTextures.normalMap)
+                          matWithTextures.normalMap.dispose();
+                        if (matWithTextures.roughnessMap)
+                          matWithTextures.roughnessMap.dispose();
+                        if (matWithTextures.metalnessMap)
+                          matWithTextures.metalnessMap.dispose();
                       });
                     } else {
-                      const mat = entity.mesh.material as any;
+                      const mat = entity.mesh.material as MaterialWithTextures;
                       mat.dispose();
                       // Dispose textures if any
                       if (mat.map) mat.map.dispose();
@@ -299,12 +313,11 @@ export const GameScene: React.FC = () => {
               // Dispose chunk mesh materials and geometry
               if (oldChunk.mesh.material) {
                 if (Array.isArray(oldChunk.mesh.material)) {
-                  oldChunk.mesh.material.forEach((mat: any) => {
-                    mat.dispose();
+                  oldChunk.mesh.material.forEach((mat) => {
+                    (mat as MaterialWithTextures).dispose();
                   });
                 } else {
-                  const mat = oldChunk.mesh.material as any;
-                  mat.dispose();
+                  (oldChunk.mesh.material as MaterialWithTextures).dispose();
                 }
               }
               if (oldChunk.mesh.geometry) {
